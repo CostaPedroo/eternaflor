@@ -98,7 +98,7 @@ function Index() {
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <a href="#catalogo" className="hidden border border-primary px-6 py-2.5 text-[10px] uppercase tracking-[0.2em] transition-all hover:bg-primary hover:text-primary-foreground sm:inline-flex">
+            <a href="#catalogo" className="inline-flex border border-primary px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] transition-all hover:bg-primary hover:text-primary-foreground sm:px-6">
               Encomendar
             </a>
             <button aria-label="Menu" onClick={() => setOpen(!open)} className="grid h-11 w-11 place-items-center lg:hidden">
@@ -116,31 +116,31 @@ function Index() {
       </header>
 
       {/* Hero */}
-      <section id="inicio" className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-12 px-6 pt-14 pb-24 md:px-16 md:pt-20 md:pb-32 lg:grid-cols-12">
-        <div className="lg:col-span-5">
+      <section id="inicio" className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-8 pb-20 md:px-16 md:pt-20 md:pb-32 lg:grid-cols-12 lg:gap-12">
+        <div className="relative lg:order-2 lg:col-span-7">
+          <div className="aspect-[4/5] overflow-hidden bg-muted sm:aspect-[5/4] lg:aspect-[4/5]">
+            <img src={hero} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" width={1024} height={1280} className="h-full w-full object-cover" />
+          </div>
+          <div className="absolute bottom-0 left-0 border border-blush bg-background px-5 py-4 xl:bottom-8 xl:-translate-x-1/4 xl:p-8">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-sage xl:text-xs">Coleção permanente</span>
+            <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">A partir de 18€</p>
+          </div>
+        </div>
+        <div className="lg:order-1 lg:col-span-5">
           <p className={eyebrow}>Flores artesanais · Portugal</p>
-          <h1 className="mt-6 text-6xl font-light leading-[0.9] md:text-[92px]">
+          <h1 className="mt-5 text-5xl font-light leading-[0.95] md:text-[92px]">
             Flores que <br /><em className="italic">não murcham.</em>
           </h1>
-          <p className="mt-8 max-w-sm text-lg font-light leading-relaxed">
+          <p className="mt-6 max-w-sm text-base font-light leading-relaxed md:mt-8 md:text-lg">
             Bouquets feitos à mão para oferecer hoje e guardar durante anos.
           </p>
-          <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:gap-6">
+          <div className="mt-8 flex flex-col gap-3 md:mt-12 sm:flex-row sm:gap-6">
             <a href="#catalogo" className={btnPrimary}>Ver bouquets</a>
             <a href="#personalizados" className={btnOutline}>Criar o meu bouquet</a>
           </div>
-          <p className="mt-10 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="mt-8 text-[10px] uppercase tracking-[0.2em] text-muted-foreground md:mt-10">
             Feito à mão em Portugal · Envio por CTT
           </p>
-        </div>
-        <div className="relative lg:col-span-7">
-          <div className="aspect-[4/5] overflow-hidden bg-muted">
-            <img src={hero} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" width={1024} height={1280} className="h-full w-full object-cover" />
-          </div>
-          <div className="absolute bottom-8 left-0 hidden -translate-x-1/4 border border-blush bg-background p-8 xl:block">
-            <span className="text-xs uppercase tracking-[0.2em] text-sage">Coleção permanente</span>
-            <p className="mt-2 font-serif text-2xl">A partir de 18€</p>
-          </div>
         </div>
       </section>
 
@@ -171,22 +171,23 @@ function Index() {
               <h2 className="mt-4 text-5xl font-light md:text-6xl">Os favoritos</h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-20">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4 lg:gap-y-20">
             {products.map((p) => (
               <article key={p.name} className="group">
-                <div className="aspect-[4/5] overflow-hidden bg-card">
+                <div className="relative aspect-[4/5] overflow-hidden bg-card">
                   <img src={p.img} alt={`${p.name} — flores feitas à mão`} loading="lazy" width={800} height={1008} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{p.price}€</span>
                 </div>
-                <div className="mt-8 flex items-baseline justify-between gap-3">
-                  <h3 className="text-3xl font-light">{p.name}</h3>
-                  <span className="shrink-0 text-lg font-light">{p.price}€</span>
+                <div className="mt-4 flex items-baseline justify-between gap-3 md:mt-8">
+                  <h3 className="text-xl font-light md:text-3xl">{p.name}</h3>
+                  <span className="hidden shrink-0 text-lg font-light md:inline">{p.price}€</span>
                 </div>
-                <p className="mt-3 text-sm font-light leading-relaxed text-muted-foreground">{p.desc}</p>
+                <p className="mt-3 hidden text-sm font-light leading-relaxed text-muted-foreground md:block">{p.desc}</p>
                 <a
                   href={wa(`Olá! Gostava de encomendar o ${p.name} de ${p.price}€. Podem confirmar disponibilidade?`)}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-8 inline-flex w-full items-center justify-center border border-primary py-4 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-primary hover:text-primary-foreground"
+                  className="mt-4 inline-flex w-full items-center justify-center border border-primary py-3.5 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-primary hover:text-primary-foreground md:mt-8 md:py-4"
                 >
                   Quero este
                 </a>
@@ -280,7 +281,7 @@ function Index() {
       </section>
 
       {/* Footer */}
-      <footer id="contactos" className="bg-primary px-6 pb-28 pt-20 text-primary-foreground md:px-16">
+      <footer id="contactos" className="bg-primary px-6 pb-32 pt-20 text-primary-foreground md:px-16 md:pb-28">
         <div className="mx-auto grid max-w-[1440px] gap-12 md:grid-cols-3">
           <div>
             <p className="font-serif text-3xl italic">Eterna Flor</p>
@@ -302,12 +303,29 @@ function Index() {
         </div>
       </footer>
 
-      {/* Floating WhatsApp */}
+      {/* Sticky mobile CTA bar */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
+        <div className="grid grid-cols-2 gap-2 px-4 py-3">
+          <a href="#catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
+            Ver bouquets · 18€+
+          </a>
+          <a
+            href={wa("Olá! Precisava de ajuda com uma encomenda.")}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 border border-primary py-3.5 text-[11px] uppercase tracking-[0.2em]"
+          >
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </a>
+        </div>
+      </div>
+
+      {/* Floating WhatsApp (desktop) */}
       <a
         href={wa("Olá! Precisava de ajuda com uma encomenda.")}
         target="_blank"
         rel="noreferrer"
-        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 bg-whatsapp px-5 py-3.5 text-sm font-medium text-primary-foreground shadow-soft"
+        className="fixed bottom-5 right-5 z-50 hidden items-center gap-2 bg-whatsapp px-5 py-3.5 text-sm font-medium text-primary-foreground shadow-soft md:inline-flex"
       >
         <MessageCircle className="h-5 w-5" /> Precisas de ajuda?
       </a>
