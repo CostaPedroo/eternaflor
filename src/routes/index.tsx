@@ -58,22 +58,16 @@ const categories = [
 ];
 
 const faqs = [
-  ["As flores são mesmo feitas à mão?", "Sim. Cada flor é moldada à mão, fio a fio, no nosso atelier em Portugal."],
-  ["Posso escolher as cores?", "Claro. Diz-nos as cores que preferes e adaptamos o bouquet."],
-  ["Posso pedir um bouquet totalmente personalizado?", "Sim — usa o formulário de bouquet personalizado e enviamos-te uma proposta pelo WhatsApp."],
-  ["Quanto tempo demora uma encomenda?", "Normalmente entre 3 e 7 dias, conforme o tamanho e a época. Confirmamos o prazo ao encomendar."],
-  ["Fazem envios para todo o país?", "Sim, enviamos para todo Portugal por CTT."],
+  ["Quanto tempo demora uma encomenda?", "Normalmente entre 3 e 7 dias. Confirmamos o prazo ao encomendar."],
+  ["Fazem envios para todo o país?", "Sim, enviamos para todo Portugal por CTT. Em Gondomar e Ermesinde entregamos em mão."],
   ["Como é feito o pagamento?", "Indicamos as opções de pagamento ao confirmar a encomenda pelo WhatsApp."],
-  ["Posso levantar pessoalmente?", "Fazemos entrega em mão em Gondomar e Ermesinde. Combina connosco pelo WhatsApp."],
+  ["Posso escolher as cores e as flores?", "Claro — usa o formulário de bouquet personalizado e enviamos-te uma proposta pelo WhatsApp."],
   ["Como devo conservar as flores?", "Mantém longe da humidade e do sol direto. Para limpar o pó, usa um secador em ar frio."],
 ];
 
 const nav = [
-  ["Início", "#inicio"],
-  ["Catálogo", "#catalogo"],
-  ["Personalizados", "#personalizados"],
-  ["Como funciona", "#como-funciona"],
-  ["Feedback", "#feedback"],
+  ["Bouquets", "#catalogo"],
+  ["Personalizar", "#personalizados"],
   ["FAQ", "#faq"],
 ];
 
@@ -194,70 +188,28 @@ function Index() {
               </article>
             ))}
           </div>
+          <div className="mt-16 text-center md:mt-24">
+            <p className="font-serif text-2xl font-light italic md:text-3xl">Não encontras o que procuras?</p>
+            <a href="#personalizados" className={`${btnPrimary} mt-6`}>Criar o meu bouquet</a>
+          </div>
         </div>
       </section>
 
       {/* Custom */}
       <CustomSection />
 
-      {/* Process */}
-      <section id="como-funciona" className="scroll-mt-20 border-t border-border">
-        <div className="mx-auto max-w-[1440px] px-6 py-24 md:px-16 md:py-32">
-          <p className={eyebrow}>Como funciona</p>
-          <h2 className="mt-4 max-w-xl text-5xl font-light md:text-6xl">De um simples fio a uma flor eterna.</h2>
-          <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-10">
-            {[
-              ["01", "Escolhes", "Cores, flores e orçamento.", hero],
-              ["02", "Criamos", "Cada flor é feita manualmente.", hands],
-              ["03", "Recebes", "Pronta para oferecer.", gift],
-            ].map(([n, t, d, img]) => (
-              <div key={n}>
-                <div className="aspect-[4/5] overflow-hidden bg-muted">
-                  <img src={img} alt={t} loading="lazy" width={800} height={1000} className="h-full w-full object-cover" />
-                </div>
-                <div className="mt-6 flex items-baseline gap-4">
-                  <span className="font-serif text-lg italic text-sage">{n}</span>
-                  <h3 className="text-3xl font-light">{t}</h3>
-                </div>
-                <p className="mt-2 text-sm font-light text-muted-foreground">{d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Social proof — placeholders */}
-      <section id="feedback" className="scroll-mt-20 border-t border-border">
-        <div className="mx-auto max-w-[1440px] px-6 py-24 md:px-16 md:py-32">
-          <p className={eyebrow}>Feedback</p>
-          <h2 className="mt-4 text-5xl font-light md:text-6xl">Quem recebe uma Eterna Flor</h2>
-          <p className="mt-4 max-w-md font-light text-muted-foreground">As opiniões das nossas clientes vão aparecer aqui em breve.</p>
-          <div className="-mx-6 mt-12 flex snap-x gap-6 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-4 md:px-0">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex aspect-[3/4] w-56 shrink-0 snap-start flex-col justify-between border border-dashed border-border p-8 md:w-auto">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Cliente</span>
-                <p className="font-serif text-2xl italic font-light text-muted-foreground">Espaço para opinião de cliente.</p>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Em breve</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Instagram */}
+      {/* Instagram — prova social */}
       <section className="border-t border-border">
-        <div className="mx-auto max-w-[1440px] px-6 py-24 text-center md:px-16 md:py-32">
-          <p className={eyebrow}>Instagram</p>
-          <h2 className="mt-4 text-5xl font-light md:text-6xl">Feitas à mão. Partilhadas com amor.</h2>
-          <p className="mt-4 font-light text-muted-foreground">@eternaflor.pt</p>
-          <div className="mt-12 grid grid-cols-3 gap-2 md:gap-4">
-            {[hero, bRosa, hands, bAzul, vase, gift].map((img, i) => (
-              <div key={i} className="aspect-square overflow-hidden bg-muted">
+        <div className="mx-auto max-w-[1440px] px-6 py-16 text-center md:px-16 md:py-24">
+          <p className={eyebrow}>Instagram · @eternaflor.pt</p>
+          <div className="mt-10 grid grid-cols-3 gap-2 md:gap-4">
+            {[bRosa, hands, gift].map((img, i) => (
+              <a key={i} href={INSTAGRAM} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden bg-muted">
                 <img src={img} alt="Fotografia Eterna Flor no Instagram" loading="lazy" width={800} height={800} className="h-full w-full object-cover" />
-              </div>
+              </a>
             ))}
           </div>
-          <a href={INSTAGRAM} target="_blank" rel="noreferrer" className={`${btnOutline} mt-12 gap-3`}>
+          <a href={INSTAGRAM} target="_blank" rel="noreferrer" className={`${btnOutline} mt-10 gap-3`}>
             <Instagram className="h-4 w-4" /> Seguir no Instagram
           </a>
         </div>
@@ -365,7 +317,7 @@ function CustomSection() {
           <p className={eyebrow}>Personalizados</p>
           <h2 className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl">Um bouquet feito só para essa pessoa.</h2>
           <p className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground">
-            Escolhe as cores, as flores, o orçamento e a ocasião. Nós tratamos do resto.
+            Preenche o formulário e recebes uma proposta pelo WhatsApp.
           </p>
           <div className="mt-16 hidden aspect-video overflow-hidden bg-muted md:block">
             <img src={hands} alt="Flor de chenille a ser feita à mão" loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" />
