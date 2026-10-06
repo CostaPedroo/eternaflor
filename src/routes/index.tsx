@@ -58,22 +58,16 @@ const categories = [
 ];
 
 const faqs = [
-  ["As flores são mesmo feitas à mão?", "Sim. Cada flor é moldada à mão, fio a fio, no nosso atelier em Portugal."],
-  ["Posso escolher as cores?", "Claro. Diz-nos as cores que preferes e adaptamos o bouquet."],
-  ["Posso pedir um bouquet totalmente personalizado?", "Sim — usa o formulário de bouquet personalizado e enviamos-te uma proposta pelo WhatsApp."],
-  ["Quanto tempo demora uma encomenda?", "Normalmente entre 3 e 7 dias, conforme o tamanho e a época. Confirmamos o prazo ao encomendar."],
-  ["Fazem envios para todo o país?", "Sim, enviamos para todo Portugal por CTT."],
+  ["Quanto tempo demora uma encomenda?", "Normalmente entre 3 e 7 dias. Confirmamos o prazo ao encomendar."],
+  ["Fazem envios para todo o país?", "Sim, enviamos para todo Portugal por CTT. Em Gondomar e Ermesinde entregamos em mão."],
   ["Como é feito o pagamento?", "Indicamos as opções de pagamento ao confirmar a encomenda pelo WhatsApp."],
-  ["Posso levantar pessoalmente?", "Fazemos entrega em mão em Gondomar e Ermesinde. Combina connosco pelo WhatsApp."],
+  ["Posso escolher as cores e as flores?", "Claro — usa o formulário de bouquet personalizado e enviamos-te uma proposta pelo WhatsApp."],
   ["Como devo conservar as flores?", "Mantém longe da humidade e do sol direto. Para limpar o pó, usa um secador em ar frio."],
 ];
 
 const nav = [
-  ["Início", "#inicio"],
-  ["Catálogo", "#catalogo"],
-  ["Personalizados", "#personalizados"],
-  ["Como funciona", "#como-funciona"],
-  ["Feedback", "#feedback"],
+  ["Bouquets", "#catalogo"],
+  ["Personalizar", "#personalizados"],
   ["FAQ", "#faq"],
 ];
 
