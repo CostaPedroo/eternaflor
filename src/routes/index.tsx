@@ -36,6 +36,34 @@ export const Route = createFileRoute("/")({
       { property: "og:locale", content: "pt_PT" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://eternaflor.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Os favoritos — Eterna Flor",
+          itemListElement: products.map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "Product",
+              name: p.name,
+              description: p.desc,
+              brand: { "@type": "Brand", name: "Eterna Flor" },
+              offers: {
+                "@type": "Offer",
+                price: p.price.toFixed(2),
+                priceCurrency: "EUR",
+                availability: "https://schema.org/InStock",
+                url: "https://eternaflor.lovable.app/#catalogo",
+              },
+            },
+          })),
+        }),
+      },
+    ],
   }),
   component: Index,
 });
