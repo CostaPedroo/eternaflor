@@ -145,7 +145,7 @@ function Index() {
       </section>
 
       {/* Categories */}
-      <section className="mx-auto max-w-[1440px] px-6 pb-32 md:px-16 md:pb-48">
+      <section className="mx-auto max-w-[1440px] px-6 pb-20 md:px-16 md:pb-48">
         <div className="-mx-6 flex snap-x gap-4 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-5 md:px-0">
           {categories.map((c, i) => (
             <a
@@ -372,8 +372,8 @@ function CustomSection() {
           </div>
         </div>
 
-        <form onSubmit={submit} className="space-y-10 border border-blush bg-card p-8 md:p-16">
-          <h3 className="font-serif text-4xl font-light italic">Formulário de pedido</h3>
+        <form onSubmit={submit} className="space-y-8 border border-blush bg-card p-6 md:space-y-10 md:p-16">
+          <h3 className="font-serif text-3xl font-light italic md:text-4xl">Formulário de pedido</h3>
           <label className="block">
             <span className={fieldLabel}>Nome</span>
             <input name="nome" required className={field} />
