@@ -7,14 +7,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import hero from "@/assets/hero.jpg";
-import bFloral from "@/assets/bouquet-floral.jpg";
-import bAzul from "@/assets/bouquet-azul.jpg";
-import bRosa from "@/assets/bouquet-rosa.jpg";
-import bTulipas from "@/assets/bouquet-tulipas.jpg";
+import hero from "@/assets/bouquet-lirios-rose.webp.asset.json";
 import hands from "@/assets/hands.jpg";
-import vase from "@/assets/vase.jpg";
-import gift from "@/assets/gift.jpg";
+import pGerberas from "@/assets/bouquet-gerberas-rosa.webp.asset.json";
+import pGirassol from "@/assets/bouquet-girassol.webp.asset.json";
+import pLirios from "@/assets/bouquet-lirios-rose.webp.asset.json";
+import pVermelho from "@/assets/bouquet-vermelho.webp.asset.json";
+import pCaixa from "@/assets/caixa-flores.webp.asset.json";
+import pTerracota from "@/assets/bouquet-terracota.webp.asset.json";
+import pVanGogh from "@/assets/bouquet-van-gogh.webp.asset.json";
+import pMargaridas from "@/assets/mini-margaridas.webp.asset.json";
+import pQuadro from "@/assets/quadro-amor.webp.asset.json";
+import pCoracao from "@/assets/coracao-vermelho.webp.asset.json";
 
 const TITLE = "Eterna Flor | Bouquets e Flores Artesanais que Não Murcham";
 const DESC =
@@ -43,18 +47,24 @@ const INSTAGRAM = "https://instagram.com/eternaflor.pt";
 const TIKTOK = "https://tiktok.com/@eternaflor.pt";
 
 const products = [
-  { name: "Bouquet Floral", price: 30, img: bFloral, desc: "Mistura alegre de girassóis, rosas e flores do campo." },
-  { name: "Bouquet Azul", price: 25, img: bAzul, desc: "Tulipas azuis e margaridas, fresco e sereno." },
-  { name: "Bouquet Rosa", price: 25, img: bRosa, desc: "Rosas em rosa-velho, o clássico romântico." },
-  { name: "Bouquet Tulipas", price: 18, img: bTulipas, desc: "Tulipas creme e coral em papel kraft." },
+  { name: "Bouquet Gerberas Rosa", price: 25, img: pGerberas, desc: "Gerberas e tulipas em rosa, com papel kraft e laço de cetim." },
+  { name: "Bouquet Van Gogh", price: 30, img: pVanGogh, desc: "Inspirado na «Noite Estrelada», em azuis e amarelo." },
+  { name: "Bouquet Girassol", price: 22, img: pGirassol, desc: "Girassol e margaridas brancas — um raio de sol em kraft." },
+  { name: "Bouquet Terracota", price: 25, img: pTerracota, desc: "Gerberas em tons terra, quente e sofisticado." },
+  { name: "Bouquet Lírios Rosé", price: 28, img: pLirios, desc: "Lírios e tulipas rosé, romântico e delicado." },
+  { name: "Bouquet Vermelho", price: 28, img: pVermelho, desc: "Lírios e tulipas vermelhos, para grandes paixões." },
+  { name: "Caixa de Flores", price: 30, img: pCaixa, desc: "Arranjo em caixa redonda rosé com laço de cetim." },
+  { name: "Mini Margaridas Azuis", price: 15, img: pMargaridas, desc: "Mini bouquet de margaridas azuis, pronto a oferecer." },
+  { name: "Coração Vermelho", price: 12, img: pCoracao, desc: "Rosas vermelhas em coração — o presente romântico." },
+  { name: "Quadro «Amor» Personalizado", price: 35, img: pQuadro, desc: "Quadro com as vossas fotos e flores, feito à medida." },
 ];
 
 const categories = [
-  { name: "Bouquets", img: bRosa },
-  { name: "Flores individuais", img: gift },
-  { name: "Vasos", img: vase },
-  { name: "Personalizados", img: hero },
-  { name: "Presentes até 15€", img: bTulipas },
+  { name: "Bouquets", img: pGerberas },
+  { name: "Flores individuais", img: pGirassol },
+  { name: "Caixas", img: pCaixa },
+  { name: "Personalizados", img: pQuadro },
+  { name: "Presentes até 15€", img: pCoracao },
 ];
 
 const faqs = [
@@ -113,11 +123,11 @@ function Index() {
       <section id="inicio" className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-8 pb-20 md:px-16 md:pt-20 md:pb-32 lg:grid-cols-12 lg:gap-12">
         <div className="relative lg:order-2 lg:col-span-7">
           <div className="aspect-[4/5] overflow-hidden bg-muted sm:aspect-[5/4] lg:aspect-[4/5]">
-            <img src={hero} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" width={1024} height={1280} className="h-full w-full object-cover" />
+            <img src={hero.url} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" className="h-full w-full object-cover" />
           </div>
           <div className="absolute bottom-0 left-0 border border-blush bg-background px-5 py-4 xl:bottom-8 xl:-translate-x-1/4 xl:p-8">
             <span className="text-[10px] uppercase tracking-[0.2em] text-sage xl:text-xs">Coleção permanente</span>
-            <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">A partir de 18€</p>
+            <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">A partir de 12€</p>
           </div>
         </div>
         <div className="lg:order-1 lg:col-span-5">
@@ -148,7 +158,7 @@ function Index() {
               className={`group w-40 shrink-0 snap-start md:w-auto ${i % 2 === 1 ? "md:mt-12" : ""}`}
             >
               <div className="aspect-[3/4] overflow-hidden bg-muted">
-                <img src={c.img} alt={c.name} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={c.img.url} alt={c.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
               </div>
               <p className="mt-4 text-center font-serif text-xl italic">{c.name}</p>
             </a>
@@ -169,7 +179,7 @@ function Index() {
             {products.map((p) => (
               <article key={p.name} className="group">
                 <div className="relative aspect-[4/5] overflow-hidden bg-card">
-                  <img src={p.img} alt={`${p.name} — flores feitas à mão`} loading="lazy" width={800} height={1008} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={p.img.url} alt={`${p.name} — flores feitas à mão`} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{p.price}€</span>
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-3 md:mt-8">
@@ -203,9 +213,9 @@ function Index() {
         <div className="mx-auto max-w-[1440px] px-6 py-16 text-center md:px-16 md:py-24">
           <p className={eyebrow}>Instagram · @eternaflor.pt</p>
           <div className="mt-10 grid grid-cols-3 gap-2 md:gap-4">
-            {[bRosa, hands, gift].map((img, i) => (
+            {[pGirassol, pVanGogh, pCoracao].map((img, i) => (
               <a key={i} href={INSTAGRAM} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden bg-muted">
-                <img src={img} alt="Fotografia Eterna Flor no Instagram" loading="lazy" width={800} height={800} className="h-full w-full object-cover" />
+                <img src={img.url} alt="Fotografia Eterna Flor no Instagram" loading="lazy" className="h-full w-full object-cover" />
               </a>
             ))}
           </div>
@@ -259,7 +269,7 @@ function Index() {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
         <div className="grid grid-cols-2 gap-2 px-4 py-3">
           <a href="#catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
-            Ver bouquets · 18€+
+            Ver bouquets · 12€+
           </a>
           <a
             href={wa("Olá! Precisava de ajuda com uma encomenda.")}
