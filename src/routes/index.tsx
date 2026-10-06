@@ -48,13 +48,13 @@ const TIKTOK = "https://tiktok.com/@eternaflor.pt";
 
 const products = [
   { name: "Bouquet Gerberas Rosa", price: 25, img: pGerberas, desc: "Gerberas e tulipas em rosa, com papel kraft e laço de cetim." },
-  { name: "Bouquet Van Gogh", price: 30, img: pVanGogh, desc: "Inspirado na «Noite Estrelada», em azuis e amarelo." },
-  { name: "Bouquet Girassol", price: 22, img: pGirassol, desc: "Girassol e margaridas brancas — um raio de sol em kraft." },
-  { name: "Bouquet Terracota", price: 25, img: pTerracota, desc: "Gerberas em tons terra, quente e sofisticado." },
-  { name: "Bouquet Lírios Rosé", price: 28, img: pLirios, desc: "Lírios e tulipas rosé, romântico e delicado." },
+  { name: "Bouquet Van Gogh", price: 25, img: pVanGogh, desc: "Inspirado na «Noite Estrelada», em azuis e amarelo." },
+  { name: "Bouquet Girassol", price: 15, img: pGirassol, desc: "Girassol e margaridas brancas — um raio de sol em kraft." },
+  { name: "Bouquet Terracota", price: 20, img: pTerracota, desc: "Gerberas em tons terra, quente e sofisticado." },
+  { name: "Bouquet Lírios Rosé", price: 18, img: pLirios, desc: "Lírios e tulipas rosé, romântico e delicado." },
   { name: "Bouquet Vermelho", price: 28, img: pVermelho, desc: "Lírios e tulipas vermelhos, para grandes paixões." },
   { name: "Caixa de Flores", price: 30, img: pCaixa, desc: "Arranjo em caixa redonda rosé com laço de cetim." },
-  { name: "Mini Margaridas Azuis", price: 15, img: pMargaridas, desc: "Mini bouquet de margaridas azuis, pronto a oferecer." },
+  { name: "Mini Margaridas Azuis", price: 12, img: pMargaridas, desc: "Mini bouquet de margaridas azuis, pronto a oferecer." },
   { name: "Coração Vermelho", price: 12, img: pCoracao, desc: "Rosas vermelhas em coração — o presente romântico." },
   { name: "Quadro «Amor» Personalizado", price: 35, img: pQuadro, desc: "Quadro com as vossas fotos e flores, feito à medida." },
 ];
