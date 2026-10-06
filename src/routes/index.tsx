@@ -188,6 +188,10 @@ function Index() {
               </article>
             ))}
           </div>
+          <div className="mt-16 text-center md:mt-24">
+            <p className="font-serif text-2xl font-light italic md:text-3xl">Não encontras o que procuras?</p>
+            <a href="#personalizados" className={`${btnPrimary} mt-6`}>Criar o meu bouquet</a>
+          </div>
         </div>
       </section>
 
@@ -313,7 +317,7 @@ function CustomSection() {
           <p className={eyebrow}>Personalizados</p>
           <h2 className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl">Um bouquet feito só para essa pessoa.</h2>
           <p className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground">
-            Escolhe as cores, as flores, o orçamento e a ocasião. Nós tratamos do resto.
+            Preenche o formulário e recebes uma proposta pelo WhatsApp.
           </p>
           <div className="mt-16 hidden aspect-video overflow-hidden bg-muted md:block">
             <img src={hands} alt="Flor de chenille a ser feita à mão" loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" />
