@@ -10,7 +10,15 @@ import netlify from "@netlify/vite-plugin-tanstack-start";
 export default defineConfig({
   // The wrapper already adds tanstackStart(); Netlify handles the deployment output.
   nitro: false,
-  plugins: [netlify()],
+  plugins: [
+    netlify({
+      dev: {
+        edgeFunctions: {
+          enabled: false,
+        },
+      },
+    }),
+  ],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     server: { entry: "server" },
