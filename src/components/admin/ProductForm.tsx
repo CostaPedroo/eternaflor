@@ -53,16 +53,16 @@ export function ProductForm({ product, initialImages = [] }: Props) {
       const n = [...s];
       const j = i + d;
       if (j < 0 || j >= n.length) return s;
-      [n[i], n[j]] = [n[j], n[i]];
+      [n[i], n[j]] = [n[j]!, n[i]!];
       return n;
     });
-  const makeMain = (i: number) => setImages((s) => [s[i], ...s.filter((_, k) => k !== i)]);
+  const makeMain = (i: number) => setImages((s) => [s[i]!, ...s.filter((_, k) => k !== i)]);
   const removeImg = (i: number) => setImages((s) => s.filter((_, k) => k !== i));
 
   const save = async (publish: boolean) => {
-    if (!v.name.trim()) return toast.error("Escreve o nome do produto.");
+    if (!v.name.trim()) { toast.error("Escreve o nome do produto."); return; }
     const price = Number(v.price.replace(",", "."));
-    if (!v.price || Number.isNaN(price) || price < 0) return toast.error("Indica um preço válido.");
+    if (!v.price || Number.isNaN(price) || price < 0) { toast.error("Indica um preço válido."); return; }
     const oldPrice = v.old_price ? Number(v.old_price.replace(",", ".")) : null;
     setSaving(true);
     try {

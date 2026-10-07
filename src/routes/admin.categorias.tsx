@@ -38,7 +38,7 @@ function CategoriesPage() {
     const slug = await uniqueSlug("categories", newName);
     const max = Math.max(0, ...(data ?? []).map((c) => c.sort_order));
     const { error } = await supabase.from("categories").insert({ name: newName.trim(), slug, sort_order: max + 1 });
-    if (error) return toast.error(friendlyError());
+    if (error) { toast.error(friendlyError()); return; }
     setNewName("");
     toast.success("Categoria criada.");
     refresh();
@@ -46,7 +46,7 @@ function CategoriesPage() {
 
   const update = async (c: Category, patch: Partial<Category>, msg: string) => {
     const { error } = await supabase.from("categories").update(patch).eq("id", c.id);
-    if (error) return toast.error(friendlyError());
+    if (error) { toast.error(friendlyError()); return; }
     toast.success(msg);
     refresh();
   };
@@ -75,7 +75,7 @@ function CategoriesPage() {
     if (!toDelete) return;
     const { error } = await supabase.from("categories").delete().eq("id", toDelete.id);
     setToDelete(null);
-    if (error) return toast.error(friendlyError());
+    if (error) { toast.error(friendlyError()); return; }
     toast.success("Categoria eliminada.");
     refresh();
   };

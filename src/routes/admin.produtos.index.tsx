@@ -69,7 +69,7 @@ function ProductsPage() {
 
   const toggleActive = async (p: Product) => {
     const { error } = await supabase.from("products").update({ active: !p.active }).eq("id", p.id);
-    if (error) return toast.error(friendlyError());
+    if (error) { toast.error(friendlyError()); return; }
     toast.success(p.active ? "Produto ocultado." : "Produto publicado com sucesso.");
     refresh();
   };
@@ -94,7 +94,7 @@ function ProductsPage() {
     const ordered = all.map((p, i) => ({ id: p.id, sort_order: (i + 1) * 10 }));
     const ia = ordered.findIndex((o) => o.id === a.id);
     const ib = ordered.findIndex((o) => o.id === b.id);
-    [ordered[ia].sort_order, ordered[ib].sort_order] = [ordered[ib].sort_order, ordered[ia].sort_order];
+    [ordered[ia]!.sort_order, ordered[ib]!.sort_order] = [ordered[ib]!.sort_order, ordered[ia]!.sort_order];
     const results = await Promise.all(
       ordered.map((o) => supabase.from("products").update({ sort_order: o.sort_order }).eq("id", o.id)),
     );
@@ -106,7 +106,7 @@ function ProductsPage() {
     if (!toDelete) return;
     const { error } = await supabase.from("products").delete().eq("id", toDelete.id);
     setToDelete(null);
-    if (error) return toast.error(friendlyError());
+    if (error) { toast.error(friendlyError()); return; }
     toast.success("Produto eliminado.");
     refresh();
   };
