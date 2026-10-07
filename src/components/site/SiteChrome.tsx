@@ -19,7 +19,7 @@ export function SiteHeader() {
         <Link to="/" className="truncate font-serif text-2xl italic tracking-wide">Eterna Flor</Link>
         <nav className="hidden gap-10 text-[10px] font-medium uppercase tracking-[0.25em] lg:flex">
           {nav.map((n) => (
-            <Link key={n.label} to={n.to} hash={n.hash} className="transition-colors hover:text-sage">{n.label}</Link>
+            <Link key={n.label} to={n.to} {...(n.hash ? { hash: n.hash } : {})} className="transition-colors hover:text-sage">{n.label}</Link>
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
@@ -34,7 +34,7 @@ export function SiteHeader() {
       {open && (
         <nav className="border-t border-border px-6 pb-4 lg:hidden">
           {nav.map((n) => (
-            <Link key={n.label} to={n.to} hash={n.hash} onClick={() => setOpen(false)} className="block border-b border-border/60 py-4 font-serif text-2xl last:border-0">{n.label}</Link>
+            <Link key={n.label} to={n.to} {...(n.hash ? { hash: n.hash } : {})} onClick={() => setOpen(false)} className="block border-b border-border/60 py-4 font-serif text-2xl last:border-0">{n.label}</Link>
           ))}
         </nav>
       )}
