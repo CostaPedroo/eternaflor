@@ -306,8 +306,18 @@ function ProductCard({ p }: { p: PublicProduct }) {
   return (
     <article className="group">
       <div className="relative aspect-[4/5] overflow-hidden bg-card">
+        <div aria-hidden className="absolute inset-0 grid place-items-center">
+          <span className="font-serif text-2xl font-light italic text-muted-foreground/60 md:text-3xl">Eterna Flor</span>
+        </div>
         {p.image && (
-          <img src={p.image} alt={`${p.name} — flores feitas à mão`} loading="lazy" decoding="async" className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.available ? "" : "opacity-60"}`} />
+          <img
+            src={p.image}
+            alt={`${p.name} — flores feitas à mão`}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+            className={`relative h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.available ? "" : "opacity-60"}`}
+          />
         )}
         <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{price}</span>
         {!p.available && (
