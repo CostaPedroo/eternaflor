@@ -414,9 +414,13 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
           <button
             data-follow-reveal
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-3 bg-whatsapp py-5 text-xs uppercase tracking-[0.3em] text-primary-foreground transition-opacity hover:opacity-90"
+            className="flex w-full items-center justify-center gap-3 bg-whatsapp px-3 py-5 text-xs uppercase tracking-[0.3em] text-primary-foreground transition-opacity hover:opacity-90"
           >
-            <MessageCircle className="h-4 w-4" /> Criar bouquet personalizado
+            <MessageCircle aria-hidden="true" className="h-5 w-5 shrink-0" />
+            <span className="min-w-0 text-center [overflow-wrap:anywhere]">
+              <span className="block sm:inline">Criar bouquet</span>{" "}
+              <span className="block sm:inline">personalizado</span>
+            </span>
           </button>
         </form>
       </div>
