@@ -4,8 +4,8 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const url = import.meta.env.VITE_EXT_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_EXT_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const url = import.meta.env["VITE_EXT_SUPABASE_URL"] as string | undefined;
+const key = import.meta.env["VITE_EXT_SUPABASE_PUBLISHABLE_KEY"] as string | undefined;
 
 export const externalConfigured = Boolean(url && key);
 
