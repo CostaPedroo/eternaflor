@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { wa, INSTAGRAM, TIKTOK, formatPrice } from "@/lib/config";
 import { publicProductsQuery } from "@/lib/catalog.functions";
+import { siteSettingsQuery } from "@/lib/site-settings";
 import { useState, type FormEvent } from "react";
 import { MessageCircle, Instagram } from "lucide-react";
 import {
@@ -11,6 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ProductCard } from "@/components/site/ProductCard";
+import { FallbackImage } from "@/components/site/FallbackImage";
 import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
 import hero from "@/assets/bouquet-lirios-rose.webp.asset.json";
 import hands from "@/assets/hands.jpg";
@@ -87,6 +89,7 @@ const eyebrow = "text-xs font-medium uppercase tracking-[0.4em] text-sage";
 
 function Index() {
   const { data: all } = useSuspenseQuery(publicProductsQuery);
+  const { data: settings, isError: settingsError } = useQuery(siteSettingsQuery);
   const products = all.filter((p) => p.featured).slice(0, 4);
   const minPrice = all.length ? Math.min(...all.map((p) => p.price)) : null;
 
@@ -98,7 +101,7 @@ function Index() {
       <section id="inicio" className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-8 pb-20 md:px-16 md:pt-20 md:pb-32 lg:grid-cols-12 lg:gap-12">
         <div className="relative lg:order-2 lg:col-span-7">
           <div className="aspect-[4/5] overflow-hidden bg-muted sm:aspect-[5/4] lg:aspect-[4/5]">
-            <img src={hero.url} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" className="h-full w-full object-cover" />
+            <FallbackImage src={settingsError ? null : settings?.hero_image_url} fallbackSrc={hero.url} alt="Bouquet Eterna Flor feito à mão com flores que não murcham" className="h-full w-full object-cover" />
           </div>
           <div className="absolute bottom-0 left-0 border border-blush bg-background px-5 py-4 xl:bottom-8 xl:-translate-x-1/4 xl:p-8">
             <span className="text-[10px] uppercase tracking-[0.2em] text-sage xl:text-xs">Coleção permanente</span>
@@ -151,7 +154,7 @@ function Index() {
         </div>
       </section>
 
-      <CustomSection />
+      <CustomSection imageUrl={settingsError ? null : settings?.custom_bouquet_image_url} />
 
       {/* Social */}
       <section className="border-t border-border">
@@ -193,7 +196,7 @@ const budgets = ["Até 15€", "15€–25€", "25€–40€", "40€–60€"
 const fieldLabel = "block text-[10px] uppercase tracking-[0.2em] text-muted-foreground";
 const field = "w-full border-b border-border bg-transparent pb-2 pt-1 text-lg font-light outline-none transition-colors focus:border-sage placeholder:text-muted-foreground/50";
 
-function CustomSection() {
+function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
   const [budget, setBudget] = useState(budgets[1]);
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
@@ -224,7 +227,7 @@ function CustomSection() {
             Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
           </p>
           <div className="mt-16 hidden aspect-video overflow-hidden bg-muted md:block">
-            <img src={hands} alt="Flor de chenille a ser feita à mão" loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" />
+            <FallbackImage src={imageUrl} fallbackSrc={hands} alt="Flor de chenille a ser feita à mão" loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" />
           </div>
         </div>
 

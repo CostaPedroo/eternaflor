@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Package, Tags } from "lucide-react";
+import { Plus, Package, Tags, Settings } from "lucide-react";
 import { supabase } from "@/integrations/external/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -46,7 +46,7 @@ function Dashboard() {
           </div>
         ))}
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2">
         <Link to="/admin/produtos/novo" className="flex h-16 items-center justify-center gap-2 bg-primary text-base font-medium text-primary-foreground">
           <Plus className="h-5 w-5" /> Novo produto
         </Link>
@@ -55,6 +55,9 @@ function Dashboard() {
         </Link>
         <Link to="/admin/categorias" className="flex h-16 items-center justify-center gap-2 border border-border bg-background text-base">
           <Tags className="h-5 w-5" /> Categorias
+        </Link>
+        <Link to="/admin/definicoes" className="flex h-16 items-center justify-center gap-2 border border-border bg-background text-base">
+          <Settings className="h-5 w-5" /> Definições
         </Link>
       </div>
     </div>

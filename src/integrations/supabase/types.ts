@@ -141,6 +141,23 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: number
+          hero_image_url: string | null
+          custom_bouquet_image_url: string | null
+        }
+        Insert: {
+          id?: number
+          hero_image_url?: string | null
+          custom_bouquet_image_url?: string | null
+        }
+        Update: {
+          hero_image_url?: string | null
+          custom_bouquet_image_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
