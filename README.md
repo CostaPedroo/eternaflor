@@ -1,26 +1,40 @@
-# eterna-flor-catalog
+# 🌷 Eterna Flor
 
-Implement exactly the screenshot and nothing else
+**Flores que não murcham.**
 
-This project was built with [Lovable](https://lovable.dev).
+Website e catálogo digital da **Eterna Flor**, uma marca portuguesa de flores, bouquets e presentes artesanais feitos à mão.
 
-**Live app**: https://eternaflor.lovable.app
+O projeto foi desenvolvido com foco em:
 
-## Build with Lovable
+- apresentação premium da marca;
+- catálogo simples de explorar;
+- encomendas através de WhatsApp;
+- gestão de produtos sem necessidade de alterar código;
+- experiência mobile-first para visitantes vindos de Instagram e TikTok.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f7aeb313-9ebb-4c92-b0a2-150678fdbcda).
+---
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## 🌐 Website
 
-## Development
+**Live:** [eternaflor.lovable.app](https://eternaflor.lovable.app)
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+---
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## ✨ Funcionalidades
+
+### Homepage
+
+- Hero editorial da Eterna Flor
+- Produtos em destaque
+- Proposta de valor da marca
+- Encomenda de bouquets personalizados
+- Integração com Instagram e TikTok
+- FAQ
+- CTA para catálogo e WhatsApp
+
+### Catálogo
+
+Disponível em:
+
+```text
+/catalogo
