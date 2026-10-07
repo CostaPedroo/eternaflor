@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ProductDetail } from "@/components/site/ProductDetail";
 
-export function ProductCard({ p }: { p: PublicProduct }) {
+export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDelay?: number }) {
   const [open, setOpen] = useState(false);
   const onSale = p.old_price != null && p.old_price > p.price;
   const price = (
@@ -15,12 +15,17 @@ export function ProductCard({ p }: { p: PublicProduct }) {
   );
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <article className="group">
+      <article
+        data-product-id={p.id}
+        data-reveal
+        data-reveal-delay={revealDelay}
+        className="product-card group"
+      >
         <DialogTrigger asChild>
           <button
             type="button"
             aria-label={`Ver detalhes de ${p.name}`}
-            className="relative block aspect-[4/5] w-full overflow-hidden bg-card text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            className="image-hover-frame relative block aspect-[4/5] w-full overflow-hidden bg-card text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
           >
             <div aria-hidden className="absolute inset-0 grid place-items-center">
               <span className="font-serif text-2xl font-light italic text-muted-foreground/60 md:text-3xl">
@@ -36,7 +41,7 @@ export function ProductCard({ p }: { p: PublicProduct }) {
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
-                className={`relative h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.available ? "" : "opacity-60"}`}
+                className={`editorial-image relative h-full w-full object-cover ${p.available ? "" : "opacity-60"}`}
               />
             )}
             <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">

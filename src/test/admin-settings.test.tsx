@@ -66,6 +66,7 @@ describe("Admin photo workflow", () => {
       target: { files: [new File(["original"], "phone.jpg", { type: "image/jpeg" })] },
     });
     await section.findByText("Nova fotografia selecionada. Guarda para atualizar a homepage.");
+    expect(mocks.prepare).toHaveBeenCalledWith(expect.any(File), field);
     expect(mocks.save).not.toHaveBeenCalled();
     fireEvent.click(section.getByRole("button", { name: "Guardar" }));
     await waitFor(() =>

@@ -12,6 +12,8 @@ import {
 import type { PublicProduct } from "@/lib/catalog.functions";
 import { formatPrice, productOrderMessage, wa } from "@/lib/config";
 import { productImagesQuery, type PublicProductImage } from "@/lib/product-images";
+import { CrossfadeImage } from "@/components/site/CrossfadeImage";
+import { motionStyle } from "@/lib/storefront-motion";
 
 /** Mounted only when the user opens a card, so catalogue cards do not fetch galleries. */
 export function ProductDetail({ p }: { p: PublicProduct }) {
@@ -21,8 +23,11 @@ export function ProductDetail({ p }: { p: PublicProduct }) {
 
   return (
     <DialogPortal>
-      <DialogOverlay className="bg-foreground/40" />
-      <Content className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-border bg-background p-4 pt-16 text-foreground sm:p-8 sm:pt-16">
+      <DialogOverlay style={motionStyle} className="storefront-overlay bg-foreground/40" />
+      <Content
+        style={motionStyle}
+        className="storefront-dialog fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-border bg-background p-4 pt-16 text-foreground sm:p-8 sm:pt-16"
+      >
         <DialogClose
           aria-label="Fechar detalhes do produto"
           className="absolute right-3 top-3 grid h-11 w-11 place-items-center border border-border transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
@@ -141,7 +146,6 @@ function ProductGallery({
         }}
       >
         <GalleryPhoto
-          key={current.url}
           src={current.url}
           fallbackSrc={product.image}
           alt={current.alt || `${product.name} — fotografia ${index + 1}`}
@@ -218,14 +222,25 @@ function GalleryPhoto({
           Eterna Flor
         </span>
       </div>
-      {url && (
+      {url && !thumbnail && (
+        <CrossfadeImage
+          src={url}
+          alt={alt}
+          onError={() => setFailed((previous) => [...previous, url])}
+        />
+      )}
+      {url && thumbnail && (
         <img
+          key={url}
           src={url}
           alt={alt}
           decoding="async"
           draggable={false}
+          onLoad={(event) => {
+            if (!thumbnail) event.currentTarget.dataset["loaded"] = "true";
+          }}
           onError={() => setFailed((previous) => [...previous, url])}
-          className={`relative h-full w-full ${thumbnail ? "object-cover" : "object-contain"}`}
+          className={`relative h-full w-full ${thumbnail ? "object-cover" : "gallery-photo object-contain"}`}
         />
       )}
     </>

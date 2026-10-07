@@ -144,6 +144,51 @@ describe("Photo processing", () => {
     expect(canvas.toBlob).toHaveBeenCalledTimes(2);
   });
 
+  it("prepares hero photos at 1800px and WebP quality 0.83 without changing other site photos", async () => {
+    const processed = new Blob(["webp"], { type: "image/webp" });
+    vi.spyOn(canvas, "toBlob").mockImplementation((callback) => callback(processed));
+    await prepareSiteImage(
+      new File(["original"], "phone.jpg", { type: "image/jpeg" }),
+      "hero_image_url",
+    );
+    expect(canvas.width).toBe(1800);
+    expect(canvas.height).toBe(1200);
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/webp", 0.83);
+    await prepareSiteImage(
+      new File(["original"], "phone.jpg", { type: "image/jpeg" }),
+      "custom_bouquet_image_url",
+    );
+    expect(canvas.width).toBe(2000);
+    expect(canvas.toBlob).toHaveBeenLastCalledWith(expect.any(Function), "image/webp", 0.86);
+  });
+
+  it("targets under 450 KB for heroes and keeps a useful resolution when that size is impractical", async () => {
+    vi.spyOn(canvas, "toBlob")
+      .mockImplementationOnce((callback) =>
+        callback(new Blob([new Uint8Array(600 * 1024)], { type: "image/webp" })),
+      )
+      .mockImplementation((callback) =>
+        callback(new Blob([new Uint8Array(400 * 1024)], { type: "image/webp" })),
+      );
+    const result = await prepareSiteImage(
+      new File(["original"], "phone.jpg", { type: "image/jpeg" }),
+      "hero_image_url",
+    );
+    expect(result.size).toBeLessThan(450 * 1024);
+    expect(canvas.width).toBe(1530);
+    vi.mocked(canvas.toBlob)
+      .mockClear()
+      .mockImplementation((callback) =>
+        callback(new Blob([new Uint8Array(600 * 1024)], { type: "image/webp" })),
+      );
+    const detailed = await prepareSiteImage(
+      new File(["original"], "phone.jpg", { type: "image/jpeg" }),
+      "hero_image_url",
+    );
+    expect(detailed.size).toBe(600 * 1024);
+    expect(canvas.width).toBe(1280);
+  });
+
   it("rejects processing failures instead of uploading the original", async () => {
     vi.spyOn(canvas, "toBlob").mockImplementation((callback) => callback(null));
     await expect(

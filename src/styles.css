@@ -106,6 +106,376 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  html { scroll-behavior: smooth; }
-  h1, h2, h3 { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.01em; }
+  html {
+    scroll-behavior: smooth;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Public storefront only. Values come from lib/storefront-motion.ts.
+   Scroll reveals enhance visible SSR content; photo masks never gate requests. */
+.storefront-motion {
+  /* Clip sideways reveals without turning this root into a scroll container. */
+  overflow-x: clip;
+}
+.storefront-motion,
+.storefront-dialog {
+  --reveal-distance: var(--reveal-desktop);
+  --heading-distance: var(--heading-desktop);
+  --card-distance: var(--card-desktop);
+  --split-distance: var(--split-desktop);
+  --reveal-x: 0px;
+  --reveal-y: var(--reveal-distance);
+  --reveal-scale: 1;
+  --reveal-duration: var(--motion-reveal);
+}
+.storefront-motion [data-reveal="heading"] {
+  --reveal-y: var(--heading-distance);
+  --reveal-duration: var(--motion-heading);
+}
+.storefront-motion .product-card {
+  --reveal-y: var(--card-distance);
+}
+.storefront-motion [data-reveal="footer"] {
+  --reveal-y: var(--heading-distance);
+  --reveal-duration: var(--motion-footer);
+}
+.storefront-motion [data-reveal-direction="left"] {
+  --reveal-x: calc(-1 * var(--split-distance));
+  --reveal-y: 0px;
+}
+.storefront-motion [data-reveal-direction="right"] {
+  --reveal-x: var(--split-distance);
+  --reveal-y: 0px;
+}
+.storefront-motion [data-reveal-direction="fade-scale"] {
+  --reveal-y: 0px;
+  --reveal-scale: var(--section-scale);
+}
+.storefront-motion [data-image-reveal] {
+  overflow: hidden;
+  --image-clip-start: inset(0 100% 0 0);
+}
+.storefront-motion [data-image-reveal="right"] {
+  --image-clip-start: inset(0 0 0 100%);
+}
+.storefront-motion :is(a, button, input, textarea, select),
+.storefront-dialog :is(a, button) {
+  transition-property: background-color, color, border-color, opacity, box-shadow, scale;
+  transition-duration: var(--motion-interaction);
+  transition-timing-function: var(--storefront-ease);
+}
+.storefront-motion .editorial-image,
+.storefront-motion .product-card h3 {
+  transition: transform var(--motion-hover) var(--storefront-ease);
+}
+.storefront-motion .storefront-menu {
+  overflow: hidden;
+}
+.storefront-grid {
+  position: relative;
+  isolation: isolate;
+  align-content: start;
+}
+.storefront-grid > [data-product-id] {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+.storefront-grid-exits {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.storefront-grid-exits * {
+  pointer-events: none !important;
+  animation: none !important;
+}
+.storefront-motion .storefront-nav-link {
+  position: relative;
+}
+.storefront-motion .storefront-nav-link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -0.35em;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-nav) var(--storefront-ease);
+}
+.storefront-motion .storefront-nav-link:is(:hover, :focus-visible)::after {
+  transform: scaleX(1);
+}
+.storefront-motion [data-storefront-accordion] {
+  overflow: hidden;
+}
+.storefront-motion [data-state][aria-expanded] > .lucide-chevron-down {
+  transition:
+    rotate var(--motion-menu) var(--storefront-ease),
+    transform var(--motion-menu) var(--storefront-ease);
+}
+
+@keyframes storefront-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--reveal-x), var(--reveal-y), 0) scale(var(--reveal-scale));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes storefront-image-uncover {
+  from {
+    clip-path: var(--image-clip-start);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+/* A separate initial name avoids re-hiding a server-painted cached hero.
+   A pending image switches to the decode-ready reveal instead. */
+@keyframes storefront-image-initial {
+  from {
+    clip-path: var(--image-clip-start);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes storefront-image-scale {
+  from {
+    transform: scale(var(--image-scale));
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes storefront-page {
+  from {
+    opacity: 0;
+    transform: translateY(var(--page-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes storefront-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes storefront-menu-link {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--menu-link-distance)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes storefront-menu-open {
+  from {
+    height: 0;
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--menu-distance)));
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes storefront-menu-close {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--menu-distance)));
+  }
+}
+@keyframes storefront-faq-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+@keyframes storefront-faq-close {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+@keyframes storefront-icon {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(calc(-1 * var(--icon-angle)));
+  }
+  65% {
+    transform: rotate(var(--icon-angle));
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .storefront-motion [data-reveal]:not([data-reveal="image"])[data-revealed="animate"] {
+    animation: storefront-reveal var(--reveal-duration) var(--storefront-ease)
+      min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
+  }
+  .storefront-motion [data-reveal="image"][data-revealed="animate"] {
+    animation: storefront-image-uncover var(--motion-image) var(--storefront-ease)
+      min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
+  }
+  .storefront-motion [data-reveal="image"][data-revealed="animate"] .editorial-image {
+    animation: storefront-image-scale var(--motion-image) var(--storefront-ease)
+      min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
+  }
+  .storefront-motion
+    [data-image-trigger="load"]:not([data-image-phase="loading"]):not(
+      [data-image-phase="ready"]
+    ):not([data-image-phase="failed"]) {
+    animation: storefront-image-initial var(--motion-image) var(--storefront-ease)
+      var(--hero-image-delay) backwards;
+  }
+  .storefront-motion [data-image-trigger="load"][data-image-phase="ready"] {
+    animation: storefront-image-uncover var(--motion-image) var(--storefront-ease) backwards;
+  }
+  .storefront-motion
+    [data-image-trigger="load"]
+    .hero-image:not([data-image-state="loading"]):not([data-image-state="ready"]) {
+    animation: storefront-image-scale var(--motion-image) var(--storefront-ease)
+      var(--hero-image-delay) backwards;
+  }
+  .storefront-motion .hero-image[data-image-state="loading"] {
+    opacity: 0;
+  }
+  .storefront-motion .hero-image[data-image-state="ready"] {
+    animation:
+      storefront-image-scale var(--motion-image) var(--storefront-ease) backwards,
+      storefront-fade var(--motion-gallery) var(--storefront-ease) backwards;
+  }
+  .storefront-motion [data-hero]:not([data-hero="image"]) {
+    animation: storefront-reveal var(--motion-hero) var(--storefront-ease) backwards;
+  }
+  .storefront-motion [data-hero="title"] {
+    animation-delay: var(--hero-title-delay);
+    --reveal-y: var(--heading-distance);
+  }
+  .storefront-motion [data-hero="intro"] {
+    animation-delay: var(--hero-intro-delay);
+  }
+  .storefront-motion [data-hero="cta"] {
+    animation-delay: var(--hero-cta-delay);
+  }
+  .storefront-motion [data-hero="label"] {
+    animation-delay: var(--hero-label-delay);
+  }
+  .storefront-motion [data-hero]:focus-within,
+  .storefront-motion [data-follow-reveal]:focus-visible {
+    animation: none;
+  }
+  .storefront-motion [data-revealed="animate"] [data-follow-reveal] {
+    animation: storefront-fade var(--motion-heading) var(--storefront-ease)
+      calc(var(--reveal-delay, 0ms) + var(--item-stagger)) backwards;
+  }
+  .storefront-motion [data-page-entry] {
+    animation: storefront-page var(--motion-page) var(--storefront-ease) backwards;
+  }
+  .storefront-motion :is(button:not(:disabled), a):active,
+  .storefront-dialog :is(button:not(:disabled), a):active {
+    scale: var(--press-scale);
+  }
+  .storefront-motion .storefront-menu[data-state="open"] {
+    animation: storefront-menu-open var(--motion-menu) var(--storefront-ease);
+  }
+  .storefront-motion .storefront-menu[data-state="closed"] {
+    animation: storefront-menu-close var(--motion-menu) var(--storefront-ease) forwards;
+  }
+  .storefront-motion .storefront-menu[data-state="open"] nav > a {
+    animation: storefront-menu-link var(--motion-menu) var(--storefront-ease) backwards;
+  }
+  .storefront-motion .storefront-menu nav > a:nth-child(2) {
+    animation-delay: var(--menu-stagger);
+  }
+  .storefront-motion .storefront-menu nav > a:nth-child(3) {
+    animation-delay: calc(var(--menu-stagger) * 2);
+  }
+  .storefront-motion .storefront-menu nav > a:nth-child(4) {
+    animation-delay: calc(var(--menu-stagger) * 3);
+  }
+  .storefront-motion [data-storefront-accordion][data-state="open"] {
+    animation: storefront-faq-open var(--motion-menu) var(--storefront-ease);
+  }
+  .storefront-motion [data-storefront-accordion][data-state="closed"] {
+    animation: storefront-faq-close var(--motion-menu) var(--storefront-ease) forwards;
+  }
+  .storefront-dialog[data-state="open"] {
+    animation: storefront-fade var(--motion-interaction) ease-out;
+  }
+  .storefront-overlay[data-state="open"] {
+    animation: storefront-fade var(--motion-interaction) ease-out;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .storefront-motion .image-hover-frame:hover .editorial-image {
+    transform: scale(var(--hover-scale));
+  }
+  .storefront-motion .product-card:hover h3 {
+    transform: translateY(calc(-1 * var(--title-distance)));
+  }
+  .storefront-motion :is(a, button):hover > :is(.lucide-message-circle, .lucide-instagram) {
+    animation: storefront-icon var(--motion-hover) var(--storefront-ease);
+  }
+}
+@media (max-width: 767px) {
+  .storefront-motion {
+    --reveal-distance: var(--reveal-mobile);
+    --heading-distance: var(--reveal-mobile);
+    --card-distance: var(--reveal-mobile);
+    --split-distance: var(--reveal-mobile);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .storefront-motion,
+  .storefront-motion *,
+  .storefront-dialog,
+  .storefront-dialog *,
+  .storefront-overlay {
+    animation: none !important;
+    transition-duration: 0s !important;
+  }
+  .storefront-motion [data-image-reveal] {
+    clip-path: none !important;
+  }
 }

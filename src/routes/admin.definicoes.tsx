@@ -104,7 +104,7 @@ function ImageSetting({ field, title, currentUrl, fallbackSrc, canEdit }: ImageS
     const request = ++selection.current;
     setProcessing(true);
     try {
-      const image = await prepareSiteImage(file);
+      const image = await prepareSiteImage(file, field);
       if (request !== selection.current) return;
       setPending({ image, preview: URL.createObjectURL(image) });
     } catch (error) {

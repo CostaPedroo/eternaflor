@@ -27,6 +27,15 @@ export const siteSettingsQuery = queryOptions({
   refetchInterval: 60_000,
 });
 
+// Public pages seed this from their SSR loader; no redundant hydration-time request.
+// Keep the admin query's existing refresh/error behavior above unchanged.
+export const publicSiteSettingsQuery = queryOptions({
+  ...siteSettingsQuery,
+  staleTime: 60_000,
+  refetchOnMount: false,
+  retry: false,
+});
+
 /** Upload a processed photo and update only its setting, using the admin session and existing RLS. */
 export async function saveSiteImage(field: SiteImageField, image: Blob) {
   if (!["image/webp", "image/jpeg"].includes(image.type) || image.size > 2 * 1024 * 1024) {
