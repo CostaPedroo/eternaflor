@@ -1,22 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { wa, INSTAGRAM, TIKTOK, formatPrice, productOrderMessage } from "@/lib/config";
-import { publicProductsQuery, type PublicProduct } from "@/lib/catalog.functions";
+import { wa, INSTAGRAM, TIKTOK, formatPrice } from "@/lib/config";
+import { publicProductsQuery } from "@/lib/catalog.functions";
 import { useState, type FormEvent } from "react";
-import { MessageCircle, Instagram, Menu, X } from "lucide-react";
+import { MessageCircle, Instagram } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ProductCard } from "@/components/site/ProductCard";
+import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
 import hero from "@/assets/bouquet-lirios-rose.webp.asset.json";
 import hands from "@/assets/hands.jpg";
-import pGerberas from "@/assets/bouquet-gerberas-rosa.webp.asset.json";
-import pGirassol from "@/assets/bouquet-girassol.webp.asset.json";
-import pCaixa from "@/assets/caixa-flores.webp.asset.json";
-import pQuadro from "@/assets/quadro-amor.webp.asset.json";
-import pCoracao from "@/assets/coracao-vermelho.webp.asset.json";
 
 const TITLE = "Eterna Flor | Bouquets e Flores Artesanais que Não Murcham";
 const DESC =
@@ -43,7 +40,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Os favoritos — Eterna Flor",
-          itemListElement: (loaderData ?? []).map((p, i) => ({
+          itemListElement: (loaderData ?? []).filter((p) => p.featured).slice(0, 4).map((p, i) => ({
             "@type": "ListItem",
             position: i + 1,
             item: {
@@ -57,7 +54,7 @@ export const Route = createFileRoute("/")({
                 price: p.price.toFixed(2),
                 priceCurrency: "EUR",
                 availability: p.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                url: "https://eternaflor.lovable.app/#catalogo",
+                url: "https://eternaflor.lovable.app/catalogo",
               },
             },
           })),
@@ -68,12 +65,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const categories = [
-  { name: "Bouquets", img: pGerberas },
-  { name: "Flores individuais", img: pGirassol },
-  { name: "Caixas", img: pCaixa },
-  { name: "Personalizados", img: pQuadro },
-  { name: "Presentes até 15€", img: pCoracao },
+const values = [
+  ["Feitas à mão", "Cada flor é criada individualmente."],
+  ["Não murcham", "Uma recordação feita para durar."],
+  ["Personalizáveis", "Escolhe cores, flores e estilo."],
 ];
 
 const faqs = [
@@ -84,12 +79,6 @@ const faqs = [
   ["Como devo conservar as flores?", "Mantém longe da humidade e do sol direto. Para limpar o pó, usa um secador em ar frio."],
 ];
 
-const nav = [
-  ["Bouquets", "#catalogo"],
-  ["Personalizar", "#personalizados"],
-  ["FAQ", "#faq"],
-];
-
 const btnPrimary =
   "inline-flex items-center justify-center bg-primary px-12 py-4 text-xs uppercase tracking-[0.2em] text-primary-foreground transition-colors hover:bg-foreground";
 const btnOutline =
@@ -97,40 +86,13 @@ const btnOutline =
 const eyebrow = "text-xs font-medium uppercase tracking-[0.4em] text-sage";
 
 function Index() {
-  const [open, setOpen] = useState(false);
   const { data: all } = useSuspenseQuery(publicProductsQuery);
-  const featured = all.filter((p) => p.featured);
-  const products = featured.length ? featured : all;
+  const products = all.filter((p) => p.featured).slice(0, 4);
   const minPrice = all.length ? Math.min(...all.map((p) => p.price)) : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-blush">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-6 py-5 md:px-16 lg:flex lg:justify-between">
-          <a href="#inicio" className="truncate font-serif text-2xl italic tracking-wide">Eterna Flor</a>
-          <nav className="hidden gap-10 text-[10px] font-medium uppercase tracking-[0.25em] lg:flex">
-            {nav.map(([l, h]) => (
-              <a key={h} href={h} className="transition-colors hover:text-sage">{l}</a>
-            ))}
-          </nav>
-          <div className="flex shrink-0 items-center gap-2">
-            <a href="#catalogo" className="inline-flex border border-primary px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] transition-all hover:bg-primary hover:text-primary-foreground sm:px-6">
-              Encomendar
-            </a>
-            <button aria-label="Menu" onClick={() => setOpen(!open)} className="grid h-11 w-11 place-items-center lg:hidden">
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
-        {open && (
-          <nav className="border-t border-border px-6 pb-4 lg:hidden">
-            {nav.map(([l, h]) => (
-              <a key={h} href={h} onClick={() => setOpen(false)} className="block border-b border-border/60 py-4 font-serif text-2xl last:border-0">{l}</a>
-            ))}
-          </nav>
-        )}
-      </header>
+      <SiteHeader />
 
       {/* Hero */}
       <section id="inicio" className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-8 pb-20 md:px-16 md:pt-20 md:pb-32 lg:grid-cols-12 lg:gap-12">
@@ -152,8 +114,8 @@ function Index() {
             Bouquets feitos à mão para oferecer hoje e guardar durante anos.
           </p>
           <div className="mt-8 flex flex-col gap-3 md:mt-12 sm:flex-row sm:gap-6">
-            <a href="#catalogo" className={btnPrimary}>Ver bouquets</a>
-            <a href="#personalizados" className={btnOutline}>Criar o meu bouquet</a>
+            <Link to="/catalogo" className={btnPrimary}>Ver catálogo</Link>
+            <a href="#personalizados" className={btnOutline}>Criar bouquet personalizado</a>
           </div>
           <p className="mt-8 text-[10px] uppercase tracking-[0.2em] text-muted-foreground md:mt-10">
             Feito à mão em Portugal · Envio por CTT
@@ -161,66 +123,45 @@ function Index() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="mx-auto max-w-[1440px] px-6 pb-20 md:px-16 md:pb-48">
-        <div className="-mx-6 flex snap-x gap-4 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-5 md:px-0">
-          {categories.map((c, i) => (
-            <a
-              key={c.name}
-              href={c.name === "Personalizados" ? "#personalizados" : "#catalogo"}
-              className={`group w-40 shrink-0 snap-start md:w-auto ${i % 2 === 1 ? "md:mt-12" : ""}`}
-            >
-              <div className="aspect-[3/4] overflow-hidden bg-muted">
-                <img src={c.img.url} alt={c.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              </div>
-              <p className="mt-4 text-center font-serif text-xl italic">{c.name}</p>
-            </a>
+      {/* Value proposition */}
+      <section className="border-t border-border">
+        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-16 md:grid-cols-3 md:gap-16 md:px-16 md:py-24">
+          {values.map(([t, d]) => (
+            <div key={t}>
+              <h2 className="font-serif text-3xl font-light italic">{t}</h2>
+              <p className="mt-3 font-light text-muted-foreground">{d}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Best sellers */}
-      <section id="catalogo" className="scroll-mt-20 border-t border-border">
+      {/* Favoritos */}
+      <section id="favoritos" className="scroll-mt-20 border-t border-border">
         <div className="mx-auto max-w-[1440px] px-6 py-24 md:px-16 md:py-32">
-          <div className="mb-16 flex flex-col justify-between gap-4 md:mb-20 md:flex-row md:items-baseline">
-            <div>
-              <p className={eyebrow}>Mais pedidos</p>
-              <h2 className="mt-4 text-5xl font-light md:text-6xl">Os favoritos</h2>
-            </div>
+          <div className="mb-16 md:mb-20">
+            <p className={eyebrow}>Mais pedidos</p>
+            <h2 className="mt-4 text-5xl font-light md:text-6xl">Os favoritos</h2>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4 lg:gap-y-20">
-            {products.map((p) => (
-              <ProductCard key={p.id} p={p} />
-            ))}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4">
+            {products.map((p) => <ProductCard key={p.id} p={p} />)}
           </div>
-          {products.length === 0 && (
-            <p className="text-center font-light text-muted-foreground">
-              A coleção está a ser atualizada. Fala connosco pelo WhatsApp para veres as peças disponíveis.
-            </p>
-          )}
           <div className="mt-16 text-center md:mt-24">
-            <p className="font-serif text-2xl font-light italic md:text-3xl">Não encontras o que procuras?</p>
-            <a href="#personalizados" className={`${btnPrimary} mt-6`}>Criar o meu bouquet</a>
+            <Link to="/catalogo" className={btnPrimary}>Ver todos os produtos</Link>
           </div>
         </div>
       </section>
 
-      {/* Custom */}
       <CustomSection />
 
-      {/* Instagram — prova social */}
+      {/* Social */}
       <section className="border-t border-border">
-        <div className="mx-auto max-w-[1440px] px-6 py-16 text-center md:px-16 md:py-24">
-          <p className={eyebrow}>Instagram · @eternaflor.pt</p>
-          <div className="mt-10 grid grid-cols-3 gap-2 md:gap-4">
-            {[pGirassol, pGerberas, pCoracao].map((img, i) => (
-              <a key={i} href={INSTAGRAM} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden bg-muted">
-                <img src={img.url} alt="Fotografia Eterna Flor no Instagram" loading="lazy" className="h-full w-full object-cover" />
-              </a>
-            ))}
-          </div>
-          <a href={INSTAGRAM} target="_blank" rel="noreferrer" className={`${btnOutline} mt-10 gap-3`}>
-            <Instagram className="h-4 w-4" /> Seguir no Instagram
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center gap-4 px-6 py-14 text-center md:flex-row md:justify-center md:gap-12 md:px-16">
+          <p className={eyebrow}>Segue-nos</p>
+          <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-serif text-xl italic hover:text-sage">
+            <Instagram className="h-4 w-4" /> Instagram @eternaflor.pt
+          </a>
+          <a href={TIKTOK} target="_blank" rel="noreferrer" className="font-serif text-xl italic hover:text-sage">
+            TikTok @eternaflor.pt
           </a>
         </div>
       </section>
@@ -242,110 +183,9 @@ function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer id="contactos" className="bg-primary px-6 pb-32 pt-20 text-primary-foreground md:px-16 md:pb-28">
-        <div className="mx-auto grid max-w-[1440px] gap-12 md:grid-cols-3">
-          <div>
-            <p className="font-serif text-3xl italic">Eterna Flor</p>
-            <p className="mt-3 font-light opacity-75">Flores que não murcham.</p>
-          </div>
-          <div className="space-y-2 text-sm font-light opacity-85">
-            <p>Envios: CTT Portugal</p>
-            <p>Entrega em mão: Gondomar & Ermesinde</p>
-            <p>Instagram: @eternaflor.pt</p>
-            <p>TikTok: @eternaflor.pt</p>
-          </div>
-          <nav className="flex flex-wrap gap-x-8 gap-y-3 text-[10px] uppercase tracking-[0.25em]">
-            <a href={wa("Olá!")} target="_blank" rel="noreferrer">Contactos</a>
-            <a href="#faq">FAQ</a>
-            <a href="#faq">Envios</a>
-            <a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a>
-            <a href={TIKTOK} target="_blank" rel="noreferrer">TikTok</a>
-          </nav>
-        </div>
-      </footer>
-
-      {/* Sticky mobile CTA bar */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-2 gap-2 px-4 py-3">
-          <a href="#catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
-            Ver bouquets{minPrice != null ? ` · ${formatPrice(minPrice)}+` : ""}
-          </a>
-          <a
-            href={wa("Olá! Precisava de ajuda com uma encomenda.")}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 border border-primary py-3.5 text-[11px] uppercase tracking-[0.2em]"
-          >
-            <MessageCircle className="h-4 w-4" /> WhatsApp
-          </a>
-        </div>
-      </div>
-
-      {/* Floating WhatsApp (desktop) */}
-      <a
-        href={wa("Olá! Precisava de ajuda com uma encomenda.")}
-        target="_blank"
-        rel="noreferrer"
-        className="fixed bottom-5 right-5 z-50 hidden items-center gap-2 bg-whatsapp px-5 py-3.5 text-sm font-medium text-primary-foreground shadow-soft md:inline-flex"
-      >
-        <MessageCircle className="h-5 w-5" /> Precisas de ajuda?
-      </a>
+      <SiteFooter />
+      <MobileCtaBar />
     </div>
-  );
-}
-
-function ProductCard({ p }: { p: PublicProduct }) {
-  const onSale = p.old_price != null && p.old_price > p.price;
-  const price = (
-    <span className="inline-flex items-baseline gap-2">
-      {onSale && <s className="text-sm text-muted-foreground">{formatPrice(p.old_price!)}</s>}
-      <span>{formatPrice(p.price)}</span>
-    </span>
-  );
-  return (
-    <article className="group">
-      <div className="relative aspect-[4/5] overflow-hidden bg-card">
-        <div aria-hidden className="absolute inset-0 grid place-items-center">
-          <span className="font-serif text-2xl font-light italic text-muted-foreground/60 md:text-3xl">Eterna Flor</span>
-        </div>
-        {p.image && (
-          <img
-            src={p.image}
-            alt={`${p.name} — flores feitas à mão`}
-            loading="lazy"
-            decoding="async"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
-            className={`relative h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.available ? "" : "opacity-60"}`}
-          />
-        )}
-        <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{price}</span>
-        {!p.available && (
-          <span className="absolute left-0 top-0 bg-background px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]">Temporariamente indisponível</span>
-        )}
-      </div>
-      <div className="mt-4 flex items-baseline justify-between gap-3 md:mt-8">
-        <h3 className="text-xl font-light md:text-3xl">{p.name}</h3>
-        <span className="hidden shrink-0 text-lg font-light md:inline">{price}</span>
-      </div>
-      {p.short_description && (
-        <p className="mt-3 hidden text-sm font-light leading-relaxed text-muted-foreground md:block">{p.short_description}</p>
-      )}
-      {p.available ? (
-        <a
-          href={wa(productOrderMessage(p))}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex w-full items-center justify-center border border-primary py-3.5 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-primary hover:text-primary-foreground md:mt-8 md:py-4"
-        >
-          Quero este
-        </a>
-      ) : (
-        <span aria-disabled className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center border border-border py-3.5 text-[10px] uppercase tracking-[0.25em] text-muted-foreground md:mt-8 md:py-4">
-          Indisponível
-        </span>
-      )}
-    </article>
   );
 }
 
@@ -381,7 +221,7 @@ function CustomSection() {
           <p className={eyebrow}>Personalizados</p>
           <h2 className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl">Um bouquet feito só para essa pessoa.</h2>
           <p className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground">
-            Preenche o formulário e recebes uma proposta pelo WhatsApp.
+            Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
           </p>
           <div className="mt-16 hidden aspect-video overflow-hidden bg-muted md:block">
             <img src={hands} alt="Flor de chenille a ser feita à mão" loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" />
@@ -432,7 +272,7 @@ function CustomSection() {
             <textarea name="detalhes" rows={2} className={`${field} resize-none`} />
           </label>
           <button type="submit" className="inline-flex w-full items-center justify-center gap-3 bg-whatsapp py-5 text-xs uppercase tracking-[0.3em] text-primary-foreground transition-opacity hover:opacity-90">
-            <MessageCircle className="h-4 w-4" /> Enviar pedido pelo WhatsApp
+            <MessageCircle className="h-4 w-4" /> Criar bouquet personalizado
           </button>
         </form>
       </div>
