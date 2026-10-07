@@ -213,7 +213,7 @@ function Index() {
         <div className="mx-auto max-w-[1440px] px-6 py-16 text-center md:px-16 md:py-24">
           <p className={eyebrow}>Instagram · @eternaflor.pt</p>
           <div className="mt-10 grid grid-cols-3 gap-2 md:gap-4">
-            {[pGirassol, pVanGogh, pCoracao].map((img, i) => (
+            {[pGirassol, pGerberas, pCoracao].map((img, i) => (
               <a key={i} href={INSTAGRAM} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden bg-muted">
                 <img src={img.url} alt="Fotografia Eterna Flor no Instagram" loading="lazy" className="h-full w-full object-cover" />
               </a>
