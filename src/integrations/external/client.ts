@@ -3,11 +3,12 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-export const EXT_SUPABASE_URL =
-  (import.meta.env["VITE_EXT_SUPABASE_URL"] as string | undefined) || "https://bstkoszixigsxlkvesei.supabase.co";
-export const EXT_SUPABASE_PUBLISHABLE_KEY =
-  (import.meta.env["VITE_EXT_SUPABASE_PUBLISHABLE_KEY"] as string | undefined) ||
-  "sb_publishable_uYIOWxme6ttp70TtvJv0bg_owLeCFAJ";
+// Single configuration source: VITE_EXT_SUPABASE_URL / VITE_EXT_SUPABASE_PUBLISHABLE_KEY (see .env.development / .env.production).
+export const EXT_SUPABASE_URL = import.meta.env["VITE_EXT_SUPABASE_URL"] as string;
+export const EXT_SUPABASE_PUBLISHABLE_KEY = import.meta.env["VITE_EXT_SUPABASE_PUBLISHABLE_KEY"] as string;
+if (!EXT_SUPABASE_URL || !EXT_SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error("Missing VITE_EXT_SUPABASE_URL or VITE_EXT_SUPABASE_PUBLISHABLE_KEY");
+}
 
 const isBrowser = typeof window !== "undefined";
 
