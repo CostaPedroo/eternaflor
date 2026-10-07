@@ -1,6 +1,6 @@
 // Configuração central da loja — alterar aqui e reflete-se em todo o site.
-// TODO: definir o número de WhatsApp real (formato internacional, sem "+")
-export const WHATSAPP_NUMBER = "351000000000";
+// Número de WhatsApp para teste (formato internacional, sem "+").
+export const WHATSAPP_NUMBER = "351916883724";
 export const INSTAGRAM = "https://instagram.com/eternaflor.pt";
 export const TIKTOK = "https://tiktok.com/@eternaflor.pt";
 
