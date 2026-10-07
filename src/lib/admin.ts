@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/external/client";
 import type { Database } from "@/integrations/supabase/types";
 import { isStoragePath, PRODUCT_IMAGES_BUCKET } from "./config";
 
@@ -37,14 +37,10 @@ export async function uniqueSlug(table: "products" | "categories", name: string,
 }
 
 /** Resolve stored image values (storage paths or URLs) to displayable URLs. */
-export async function resolveImageUrls(values: (string | null | undefined)[]) {
-  const paths = values.filter(isStoragePath);
-  const map = new Map<string, string>();
-  if (paths.length) {
-    const { data } = await supabase.storage.from(PRODUCT_IMAGES_BUCKET).createSignedUrls(paths, 60 * 60);
-    data?.forEach((d) => d.path && d.signedUrl && map.set(d.path, d.signedUrl));
-  }
-  return (v: string | null | undefined) => (!v ? null : isStoragePath(v) ? map.get(v) ?? null : v);
+// The bucket is public, so storage paths map directly to public URLs.
+export async function resolveImageUrls(_values: (string | null | undefined)[]) {
+  return (v: string | null | undefined) =>
+    !v ? null : isStoragePath(v) ? supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(v).data.publicUrl : v;
 }
 
 /** Resize to max 1600px and re-encode as WebP for fast loading. Falls back to the original file. */

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Star, ArrowLeft, ArrowRight, X, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/external/client";
 import { friendlyError, resolveImageUrls, uniqueSlug, uploadProductImage, type Product } from "@/lib/admin";
 
 type Img = { key: string; path?: string; file?: File; preview: string };

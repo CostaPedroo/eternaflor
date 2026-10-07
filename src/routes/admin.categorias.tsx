@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowUp, ArrowDown, Trash2, Plus, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/external/client";
 import { friendlyError, uniqueSlug, type Category } from "@/lib/admin";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

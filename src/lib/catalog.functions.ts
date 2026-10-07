@@ -17,8 +17,9 @@ export type PublicProduct = {
 export const getPublicProducts = createServerFn({ method: "GET" }).handler(async (): Promise<PublicProduct[]> => {
   const { createClient } = await import("@supabase/supabase-js");
   const { isStoragePath, PRODUCT_IMAGES_BUCKET } = await import("./config");
+  const { EXT_SUPABASE_URL, EXT_SUPABASE_PUBLISHABLE_KEY } = await import("@/integrations/external/client");
   try {
-    const sb = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
+    const sb = createClient(EXT_SUPABASE_URL, EXT_SUPABASE_PUBLISHABLE_KEY, {
       auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     });
     const { data, error } = await sb
@@ -31,14 +32,7 @@ export const getPublicProducts = createServerFn({ method: "GET" }).handler(async
       console.error("getPublicProducts", error);
       return [];
     }
-    const paths = data.map((p) => p.main_image).filter(isStoragePath);
-    const signed = new Map<string, string>();
-    if (paths.length) {
-      const { data: urls } = await sb.storage
-        .from(PRODUCT_IMAGES_BUCKET)
-        .createSignedUrls(paths, 60 * 60 * 24 * 7);
-      urls?.forEach((u) => u.path && u.signedUrl && signed.set(u.path, u.signedUrl));
-    }
+    const pub = (path: string) => sb.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
     return data.map((p) => ({
       id: p.id,
       name: p.name,
@@ -46,7 +40,7 @@ export const getPublicProducts = createServerFn({ method: "GET" }).handler(async
       short_description: p.short_description,
       price: Number(p.price),
       old_price: p.old_price == null ? null : Number(p.old_price),
-      image: isStoragePath(p.main_image) ? signed.get(p.main_image) ?? null : p.main_image,
+      image: isStoragePath(p.main_image) ? pub(p.main_image) : p.main_image,
       featured: p.featured,
       customizable: p.customizable,
       available: p.available,
