@@ -67,14 +67,14 @@ export function SiteFooter() {
   );
 }
 
-export function MobileCtaBar({ label = "Ver catálogo" }: { label?: string }) {
+export function MobileCtaBar({ onCatalog = false }: { onCatalog?: boolean }) {
   return (
     <>
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-2 gap-2 px-4 py-3">
-          <Link to="/catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
-            {label}
-          </Link>
+        <div className={`grid gap-2 px-4 py-3 ${onCatalog ? "grid-cols-1" : "grid-cols-2"}`}>
+          {!onCatalog && <Link to="/catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
+            Ver catálogo
+          </Link>}
           <a href={wa("Olá! Precisava de ajuda com uma encomenda.")} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 border border-primary py-3.5 text-[11px] uppercase tracking-[0.2em]">
             <MessageCircle className="h-4 w-4" /> WhatsApp
           </a>

@@ -135,7 +135,7 @@ function Catalogo() {
         )}
       </main>
       <SiteFooter />
-      <MobileCtaBar label="WhatsApp" />
+      <MobileCtaBar onCatalog />
     </div>
   );
 }
