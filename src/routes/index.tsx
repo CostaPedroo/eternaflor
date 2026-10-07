@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { wa, INSTAGRAM, TIKTOK, formatPrice, productOrderMessage } from "@/lib/config";
+import { publicProductsQuery, type PublicProduct } from "@/lib/catalog.functions";
 import { useState, type FormEvent } from "react";
 import { MessageCircle, Instagram, Menu, X } from "lucide-react";
 import {
@@ -11,12 +14,7 @@ import hero from "@/assets/bouquet-lirios-rose.webp.asset.json";
 import hands from "@/assets/hands.jpg";
 import pGerberas from "@/assets/bouquet-gerberas-rosa.webp.asset.json";
 import pGirassol from "@/assets/bouquet-girassol.webp.asset.json";
-import pLirios from "@/assets/bouquet-lirios-rose.webp.asset.json";
-import pVermelho from "@/assets/bouquet-vermelho.webp.asset.json";
 import pCaixa from "@/assets/caixa-flores.webp.asset.json";
-import pTerracota from "@/assets/bouquet-terracota.webp.asset.json";
-import pVanGogh from "@/assets/bouquet-van-gogh.webp.asset.json";
-import pMargaridas from "@/assets/mini-margaridas.webp.asset.json";
 import pQuadro from "@/assets/quadro-amor.webp.asset.json";
 import pCoracao from "@/assets/coracao-vermelho.webp.asset.json";
 
@@ -25,7 +23,8 @@ const DESC =
   "Bouquets e flores artesanais feitos à mão em Portugal. Flores que não murcham, personalizáveis e perfeitas para oferecer.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  loader: ({ context }) => context.queryClient.ensureQueryData(publicProductsQuery),
+  head: ({ loaderData }) => ({
     meta: [
       { title: TITLE },
       { name: "description", content: DESC },
@@ -44,19 +43,20 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "ItemList",
           name: "Os favoritos — Eterna Flor",
-          itemListElement: products.map((p, i) => ({
+          itemListElement: (loaderData ?? []).map((p, i) => ({
             "@type": "ListItem",
             position: i + 1,
             item: {
               "@type": "Product",
               name: p.name,
-              description: p.desc,
+              description: p.short_description ?? undefined,
+              ...(p.image && p.image.startsWith("http") ? { image: p.image } : {}),
               brand: { "@type": "Brand", name: "Eterna Flor" },
               offers: {
                 "@type": "Offer",
                 price: p.price.toFixed(2),
                 priceCurrency: "EUR",
-                availability: "https://schema.org/InStock",
+                availability: p.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
                 url: "https://eternaflor.lovable.app/#catalogo",
               },
             },
@@ -67,25 +67,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
-
-// TODO: definir o número de WhatsApp (formato internacional, sem "+")
-const WHATSAPP_NUMBER = "351000000000";
-const wa = (msg: string) => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-const INSTAGRAM = "https://instagram.com/eternaflor.pt";
-const TIKTOK = "https://tiktok.com/@eternaflor.pt";
-
-const products = [
-  { name: "Bouquet Gerberas Rosa", price: 25, img: pGerberas, desc: "Gerberas e tulipas em rosa, com papel kraft e laço de cetim." },
-  { name: "Bouquet Van Gogh", price: 25, img: pVanGogh, desc: "Inspirado na «Noite Estrelada», em azuis e amarelo." },
-  { name: "Bouquet Girassol", price: 15, img: pGirassol, desc: "Girassol e margaridas brancas — um raio de sol em kraft." },
-  { name: "Bouquet Terracota", price: 20, img: pTerracota, desc: "Gerberas em tons terra, quente e sofisticado." },
-  { name: "Bouquet Lírios Rosé", price: 18, img: pLirios, desc: "Lírios e tulipas rosé, romântico e delicado." },
-  { name: "Bouquet Vermelho", price: 28, img: pVermelho, desc: "Lírios e tulipas vermelhos, para grandes paixões." },
-  { name: "Caixa de Flores", price: 30, img: pCaixa, desc: "Arranjo em caixa redonda rosé com laço de cetim." },
-  { name: "Mini Margaridas Azuis", price: 12, img: pMargaridas, desc: "Mini bouquet de margaridas azuis, pronto a oferecer." },
-  { name: "Coração Vermelho", price: 12, img: pCoracao, desc: "Rosas vermelhas em coração — o presente romântico." },
-  { name: "Quadro «Amor» Personalizado", price: 35, img: pQuadro, desc: "Quadro com as vossas fotos e flores, feito à medida." },
-];
 
 const categories = [
   { name: "Bouquets", img: pGerberas },
@@ -117,6 +98,10 @@ const eyebrow = "text-xs font-medium uppercase tracking-[0.4em] text-sage";
 
 function Index() {
   const [open, setOpen] = useState(false);
+  const { data: all } = useSuspenseQuery(publicProductsQuery);
+  const featured = all.filter((p) => p.featured);
+  const products = featured.length ? featured : all;
+  const minPrice = all.length ? Math.min(...all.map((p) => p.price)) : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-blush">
@@ -155,7 +140,7 @@ function Index() {
           </div>
           <div className="absolute bottom-0 left-0 border border-blush bg-background px-5 py-4 xl:bottom-8 xl:-translate-x-1/4 xl:p-8">
             <span className="text-[10px] uppercase tracking-[0.2em] text-sage xl:text-xs">Coleção permanente</span>
-            <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">A partir de 12€</p>
+            <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">{minPrice != null ? `A partir de ${formatPrice(minPrice)}` : "Feito à mão"}</p>
           </div>
         </div>
         <div className="lg:order-1 lg:col-span-5">
@@ -205,27 +190,14 @@ function Index() {
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4 lg:gap-y-20">
             {products.map((p) => (
-              <article key={p.name} className="group">
-                <div className="relative aspect-[4/5] overflow-hidden bg-card">
-                  <img src={p.img.url} alt={`${p.name} — flores feitas à mão`} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{p.price}€</span>
-                </div>
-                <div className="mt-4 flex items-baseline justify-between gap-3 md:mt-8">
-                  <h3 className="text-xl font-light md:text-3xl">{p.name}</h3>
-                  <span className="hidden shrink-0 text-lg font-light md:inline">{p.price}€</span>
-                </div>
-                <p className="mt-3 hidden text-sm font-light leading-relaxed text-muted-foreground md:block">{p.desc}</p>
-                <a
-                  href={wa(`Olá! Gostava de encomendar o ${p.name} de ${p.price}€. Podem confirmar disponibilidade?`)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-flex w-full items-center justify-center border border-primary py-3.5 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-primary hover:text-primary-foreground md:mt-8 md:py-4"
-                >
-                  Quero este
-                </a>
-              </article>
+              <ProductCard key={p.id} p={p} />
             ))}
           </div>
+          {products.length === 0 && (
+            <p className="text-center font-light text-muted-foreground">
+              A coleção está a ser atualizada. Fala connosco pelo WhatsApp para veres as peças disponíveis.
+            </p>
+          )}
           <div className="mt-16 text-center md:mt-24">
             <p className="font-serif text-2xl font-light italic md:text-3xl">Não encontras o que procuras?</p>
             <a href="#personalizados" className={`${btnPrimary} mt-6`}>Criar o meu bouquet</a>
@@ -297,7 +269,7 @@ function Index() {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
         <div className="grid grid-cols-2 gap-2 px-4 py-3">
           <a href="#catalogo" className="inline-flex items-center justify-center bg-primary py-3.5 text-[11px] uppercase tracking-[0.2em] text-primary-foreground">
-            Ver bouquets · 12€+
+            Ver bouquets{minPrice != null ? ` · ${formatPrice(minPrice)}+` : ""}
           </a>
           <a
             href={wa("Olá! Precisava de ajuda com uma encomenda.")}
@@ -320,6 +292,50 @@ function Index() {
         <MessageCircle className="h-5 w-5" /> Precisas de ajuda?
       </a>
     </div>
+  );
+}
+
+function ProductCard({ p }: { p: PublicProduct }) {
+  const onSale = p.old_price != null && p.old_price > p.price;
+  const price = (
+    <span className="inline-flex items-baseline gap-2">
+      {onSale && <s className="text-sm text-muted-foreground">{formatPrice(p.old_price!)}</s>}
+      <span>{formatPrice(p.price)}</span>
+    </span>
+  );
+  return (
+    <article className="group">
+      <div className="relative aspect-[4/5] overflow-hidden bg-card">
+        {p.image && (
+          <img src={p.image} alt={`${p.name} — flores feitas à mão`} loading="lazy" decoding="async" className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.available ? "" : "opacity-60"}`} />
+        )}
+        <span className="absolute bottom-0 left-0 bg-background px-3 py-1.5 text-sm font-light md:hidden">{price}</span>
+        {!p.available && (
+          <span className="absolute left-0 top-0 bg-background px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]">Temporariamente indisponível</span>
+        )}
+      </div>
+      <div className="mt-4 flex items-baseline justify-between gap-3 md:mt-8">
+        <h3 className="text-xl font-light md:text-3xl">{p.name}</h3>
+        <span className="hidden shrink-0 text-lg font-light md:inline">{price}</span>
+      </div>
+      {p.short_description && (
+        <p className="mt-3 hidden text-sm font-light leading-relaxed text-muted-foreground md:block">{p.short_description}</p>
+      )}
+      {p.available ? (
+        <a
+          href={wa(productOrderMessage(p))}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-flex w-full items-center justify-center border border-primary py-3.5 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-primary hover:text-primary-foreground md:mt-8 md:py-4"
+        >
+          Quero este
+        </a>
+      ) : (
+        <span aria-disabled className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center border border-border py-3.5 text-[10px] uppercase tracking-[0.25em] text-muted-foreground md:mt-8 md:py-4">
+          Indisponível
+        </span>
+      )}
+    </article>
   );
 }
 

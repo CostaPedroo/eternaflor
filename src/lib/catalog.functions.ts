@@ -36,7 +36,7 @@ export const getPublicProducts = createServerFn({ method: "GET" }).handler(async
     if (paths.length) {
       const { data: urls } = await sb.storage
         .from(PRODUCT_IMAGES_BUCKET)
-        .createSignedUrls(paths, 60 * 60 * 24 * 7, { transform: undefined } as never);
+        .createSignedUrls(paths, 60 * 60 * 24 * 7);
       urls?.forEach((u) => u.path && u.signedUrl && signed.set(u.path, u.signedUrl));
     }
     return data.map((p) => ({
