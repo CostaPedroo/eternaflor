@@ -1,20 +1,21 @@
-// Prepared for the move to the owner's own backend. NOT used yet.
-// Activated only after VITE_EXT_SUPABASE_URL / VITE_EXT_SUPABASE_PUBLISHABLE_KEY are set
-// and imports are switched from "@/integrations/supabase/client". Publishable key only — never a secret key.
+// The app's only backend: the owner's own Supabase project (Lovable Cloud is no longer used).
+// Publishable key only — it is public by design; RLS enforces all permissions. Never put a secret key here.
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const url = import.meta.env["VITE_EXT_SUPABASE_URL"] as string | undefined;
-const key = import.meta.env["VITE_EXT_SUPABASE_PUBLISHABLE_KEY"] as string | undefined;
+export const EXT_SUPABASE_URL =
+  (import.meta.env["VITE_EXT_SUPABASE_URL"] as string | undefined) || "https://bstkoszixigsxlkvesei.supabase.co";
+export const EXT_SUPABASE_PUBLISHABLE_KEY =
+  (import.meta.env["VITE_EXT_SUPABASE_PUBLISHABLE_KEY"] as string | undefined) ||
+  "sb_publishable_uYIOWxme6ttp70TtvJv0bg_owLeCFAJ";
 
-export const externalConfigured = Boolean(url && key);
+const isBrowser = typeof window !== "undefined";
 
-export const externalSupabase = externalConfigured
-  ? createClient<Database>(url!, key!, {
-      auth: {
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-    })
-  : null;
+export const supabase = createClient<Database>(EXT_SUPABASE_URL, EXT_SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    storage: isBrowser ? window.localStorage : undefined,
+    storageKey: "eternaflor-ext-auth",
+    persistSession: isBrowser,
+    autoRefreshToken: isBrowser,
+  },
+});
