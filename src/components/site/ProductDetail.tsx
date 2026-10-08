@@ -1,7 +1,7 @@
 import { Content } from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DialogClose,
   DialogDescription,
@@ -13,18 +13,42 @@ import type { PublicProduct } from "@/lib/catalog.functions";
 import { formatPrice, productOrderMessage, wa } from "@/lib/config";
 import { productImagesQuery, type PublicProductImage } from "@/lib/product-images";
 import { CrossfadeImage } from "@/components/site/CrossfadeImage";
-import { motionStyle } from "@/lib/storefront-motion";
+import { completeEntrance, motionStyle } from "@/lib/storefront-motion";
 
 /** Mounted only when the user opens a card, so catalogue cards do not fetch galleries. */
 export function ProductDetail({ p }: { p: PublicProduct }) {
   const { data, isPending, isError, refetch } = useQuery(productImagesQuery(p.id));
   const images = data?.length ? data : [{ id: "main", url: p.image ?? "", alt: null }];
   const onSale = p.old_price != null && p.old_price > p.price;
+  const overlay = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reduce = () => {
+      if (!preference.matches) return;
+      if (overlay.current) completeEntrance(overlay.current);
+      if (content.current) completeEntrance(content.current);
+    };
+    reduce();
+    preference.addEventListener("change", reduce);
+    return () => preference.removeEventListener("change", reduce);
+  }, []);
 
   return (
     <DialogPortal>
-      <DialogOverlay style={motionStyle} className="storefront-overlay bg-foreground/40" />
+      <DialogOverlay
+        ref={overlay}
+        onAnimationEnd={(event) => {
+          if (event.target === event.currentTarget) completeEntrance(event.currentTarget);
+        }}
+        style={motionStyle}
+        className="storefront-overlay bg-foreground/40"
+      />
       <Content
+        ref={content}
+        onAnimationEnd={(event) => {
+          if (event.target === event.currentTarget) completeEntrance(event.currentTarget);
+        }}
         style={motionStyle}
         className="storefront-dialog fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-border bg-background p-4 pt-16 text-foreground sm:p-8 sm:pt-16"
       >
@@ -36,11 +60,7 @@ export function ProductDetail({ p }: { p: PublicProduct }) {
         </DialogClose>
         <div className="grid min-w-0 gap-8 md:grid-cols-2 md:gap-10">
           <div className="min-w-0">
-            <ProductGallery
-              key={images.map((image) => image.id).join(",")}
-              images={images}
-              product={p}
-            />
+            <ProductGallery key={p.id} images={images} product={p} />
             {isPending && (
               <p role="status" className="mt-3 text-xs text-muted-foreground">
                 A carregar fotografias…
@@ -105,12 +125,16 @@ function ProductGallery({
   images: PublicProductImage[];
   product: PublicProduct;
 }) {
-  const [index, setIndex] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const index = Math.max(
+    0,
+    images.findIndex((image) => image.id === activeId),
+  );
   const touch = useRef<{ x: number; y: number } | null>(null);
   const current = images[index]!;
   const multiple = images.length > 1;
   const move = (direction: number) =>
-    setIndex((previous) => (previous + direction + images.length) % images.length);
+    setActiveId(images[(index + direction + images.length) % images.length]!.id);
   const arrowClass =
     "absolute top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center border border-border bg-background/90 transition-colors hover:bg-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary";
 
@@ -187,7 +211,7 @@ function ProductGallery({
                 type="button"
                 aria-label={`Ver fotografia ${position + 1} de ${product.name}`}
                 aria-pressed={position === index}
-                onClick={() => setIndex(position)}
+                onClick={() => setActiveId(image.id)}
                 className={`relative h-16 w-14 shrink-0 overflow-hidden border bg-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${position === index ? "border-primary ring-1 ring-primary" : "border-border opacity-70 hover:opacity-100"}`}
               >
                 <GalleryPhoto key={image.url} src={image.url} fallbackSrc={null} alt="" thumbnail />

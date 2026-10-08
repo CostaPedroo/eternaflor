@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { PublicProduct } from "@/lib/catalog.functions";
@@ -62,6 +62,25 @@ async function openCard() {
 }
 
 describe("Storefront product gallery", () => {
+  it("preserves the selected photo and DOM through image-list refresh/reordering", async () => {
+    renderCard();
+    const detail = await openCard();
+    fireEvent.click(detail.getByRole("button", { name: "Fotografia seguinte" }));
+    const selected = detail.getByAltText("Bouquet de lado");
+    await act(async () => {
+      queryClient.setQueryData(["public-product-images", product.id], [photos[1], photos[0]]);
+    });
+    expect(detail.getByAltText("Bouquet de lado")).toBe(selected);
+    await waitFor(() =>
+      expect(
+        detail.getByRole("button", { name: "Ver fotografia 1 de Bouquet Rosa" }),
+      ).toHaveAttribute("aria-pressed", "true"),
+    );
+    await act(async () => {
+      queryClient.setQueryData(["public-product-images", product.id], [photos[0]]);
+    });
+    expect(await detail.findByAltText("Bouquet de frente")).toBeInTheDocument();
+  });
   it("keeps cards to one main image and fetches no gallery until opened", () => {
     renderCard();
     expect(screen.getAllByRole("img")).toHaveLength(1);

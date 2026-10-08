@@ -4,31 +4,38 @@ type Props = { src: string | null | undefined; fallbackSrc: string; alt: string 
 
 /** The real URL is in SSR HTML. Loading/decoding never waits for a separate Image() preload. */
 export function HeroImage({ src, fallbackSrc, alt }: Props) {
-  return (
-    <HeroPhoto
-      key={src || fallbackSrc}
-      src={src || fallbackSrc}
-      fallbackSrc={fallbackSrc}
-      alt={alt}
-    />
-  );
+  return <HeroPhoto src={src || fallbackSrc} fallbackSrc={fallbackSrc} alt={alt} />;
 }
 
 function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string; alt: string }) {
   const ref = useRef<HTMLImageElement>(null);
-  const [failed, setFailed] = useState<string[]>([]);
+  const [failures, setFailures] = useState<{ source: string; urls: string[] }>({
+    source: src,
+    urls: [],
+  });
+  const failed = failures.source === src ? failures.urls : [];
+  const decoding = useRef(new WeakSet<HTMLImageElement>());
   const [phase, setPhase] = useState<{ url: string; state: "loading" | "ready" | "cached" } | null>(
     null,
   );
   const url = [src, fallbackSrc].find((candidate) => !failed.includes(candidate));
 
-  const fail = useCallback((image: HTMLImageElement, failedUrl: string) => {
-    // Hide the failing node immediately, before React replaces it with the default image.
-    image.style.visibility = "hidden";
-    setFailed((previous) => (previous.includes(failedUrl) ? previous : [...previous, failedUrl]));
-  }, []);
-  const reveal = useCallback(
-    async (image: HTMLImageElement, loadedUrl: string, animate: boolean) => {
+  const fail = useCallback(
+    (image: HTMLImageElement, failedUrl: string) => {
+      if (ref.current !== image) return;
+      // Hide the failing node immediately, before React replaces it with the default image.
+      image.style.visibility = "hidden";
+      setFailures((previous) => ({
+        source: src,
+        urls: previous.source === src ? [...new Set([...previous.urls, failedUrl])] : [failedUrl],
+      }));
+    },
+    [src],
+  );
+  const decodePhoto = useCallback(
+    async (image: HTMLImageElement, loadedUrl: string, cached: boolean) => {
+      if (decoding.current.has(image)) return;
+      decoding.current.add(image);
       try {
         if (typeof image.decode === "function") await image.decode();
       } catch {
@@ -39,7 +46,7 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
         fail(image, loadedUrl);
         return;
       }
-      setPhase({ url: loadedUrl, state: animate ? "ready" : "cached" });
+      setPhase({ url: loadedUrl, state: cached ? "cached" : "ready" });
     },
     [fail],
   );
@@ -49,18 +56,12 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
     if (!image || !url) return;
     if (image.complete) {
       // Do not re-hide an image that was already painted from the server HTML.
-      void reveal(image, url, false);
+      void decodePhoto(image, url, true);
     } else {
       setPhase({ url, state: "loading" });
     }
     // The keyed image ref prevents an old decode from revealing a new source.
-  }, [url, reveal]);
-
-  useEffect(() => {
-    const frame = ref.current?.closest<HTMLElement>('[data-image-trigger="load"]');
-    if (frame)
-      frame.dataset["imagePhase"] = !url ? "failed" : phase?.url === url ? phase.state : "initial";
-  }, [phase, url]);
+  }, [url, decodePhoto]);
 
   return (
     <img
@@ -76,7 +77,7 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
       style={{ color: "transparent", fontSize: 0, ...(!url ? { visibility: "hidden" } : {}) }}
       className="hero-image editorial-image h-full w-full object-cover"
       onLoad={(event) => {
-        if (url) void reveal(event.currentTarget, url, true);
+        if (url) void decodePhoto(event.currentTarget, url, false);
       }}
       onError={(event) => {
         if (url) fail(event.currentTarget, url);

@@ -1,12 +1,20 @@
 import {
   forwardRef,
+  Children,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
   type HTMLAttributes,
 } from "react";
-import { animatePhotoOrLayout, motion, reducedMotion } from "@/lib/storefront-motion";
+import {
+  animatePhotoOrLayout,
+  completeEntrance,
+  completeReveal,
+  motion,
+  onceEntranceSelector,
+  reducedMotion,
+} from "@/lib/storefront-motion";
 
 type Position = {
   x: number;
@@ -29,6 +37,12 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
     const capturedHeight = useRef<number | null>(null);
     const animations = useRef(new Set<Animation>());
     const mounted = useRef(false);
+    const order = JSON.stringify(
+      Children.toArray(children).map((child) =>
+        typeof child === "object" && "key" in child ? child.key : null,
+      ),
+    );
+    const previousOrder = useRef(order);
 
     const cards = () => [
       ...(root.current?.querySelectorAll<HTMLElement>(":scope > [data-product-id]") ?? []),
@@ -70,6 +84,7 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
       void animation.finished.then(
         () => {
           animations.current.delete(animation);
+          animation.cancel(); // Underlying styles are the permanent final state.
           finish?.();
         },
         () => {
@@ -82,11 +97,18 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
         // Retarget from the currently painted position, even mid-animation.
         captured.current = measure();
         capturedHeight.current = root.current?.getBoundingClientRect().height ?? 0;
-        cancel();
       },
     }));
 
     useLayoutEffect(() => {
+      const changed = order !== previousOrder.current;
+      previousOrder.current = order;
+      if (mounted.current && !changed) {
+        // A parent rerender (or a search that returns the same IDs) is not a shuffle.
+        captured.current = null;
+        capturedHeight.current = null;
+        return;
+      }
       const before = captured.current ?? previous.current;
       const beforeHeight = capturedHeight.current ?? previousHeight.current;
       captured.current = null;
@@ -95,7 +117,10 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
         cancel();
         root.current.dataset["layoutActive"] = "true";
         cards().forEach((card) => {
-          card.dataset["revealed"] = "immediate";
+          card.querySelectorAll<HTMLElement>("[data-reveal]").forEach((reveal) => {
+            if (!reveal.dataset["revealed"] || reveal.dataset["revealed"] === "waiting")
+              completeReveal(reveal, "immediate");
+          });
         });
       }
       const after = measure();
@@ -144,6 +169,11 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
             const ghost = document.createElement("div");
             ghost.className = old.node.className;
             ghost.innerHTML = old.node.innerHTML;
+            // A static exit snapshot must not restart copied CSS entrances.
+            ghost
+              .querySelectorAll<HTMLElement>("[data-reveal]")
+              .forEach((element) => completeReveal(element, "immediate"));
+            ghost.querySelectorAll<HTMLElement>(onceEntranceSelector).forEach(completeEntrance);
             ghost.setAttribute("aria-hidden", "true");
             ghost.inert = true;
             ghost.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
@@ -183,14 +213,18 @@ export const AnimatedGrid = forwardRef<AnimatedGridHandle, HTMLAttributes<HTMLDi
       mounted.current = true;
       previous.current = after;
       previousHeight.current = afterHeight;
-    }, [children]);
+    }, [children, order]);
 
     useEffect(() => {
       const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
       const onPreference = () => {
         if (preference.matches) cancel();
       };
+      let viewportWidth = window.innerWidth;
       const onResize = () => {
+        // Mobile address-bar height changes occur during scrolling, without reflowing cards.
+        if (viewportWidth === window.innerWidth) return;
+        viewportWidth = window.innerWidth;
         cancel();
         previous.current = measure();
         previousHeight.current = root.current?.getBoundingClientRect().height ?? 0;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { animatePhotoOrLayout, motion } from "@/lib/storefront-motion";
 
@@ -9,26 +9,38 @@ export function MenuBackdrop({ open, close }: { open: boolean; close: () => void
   useEffect(() => {
     if (open) setPresent(true);
   }, [open]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
     let cancelled = false;
-    const animation = animatePhotoOrLayout(
-      element,
-      [{ opacity: open ? 0 : 1 }, { opacity: open ? 1 : 0 }],
-      { duration: motion.duration.menu },
-    );
+    if (!element.dataset["backdropReady"]) {
+      element.style.opacity = "0";
+      element.dataset["backdropReady"] = "true";
+    }
+    const from = getComputedStyle(element).opacity || element.style.opacity;
+    const to = open ? "1" : "0";
+    const animation = animatePhotoOrLayout(element, [{ opacity: from }, { opacity: to }], {
+      duration: motion.duration.menu,
+      fill: "forwards",
+    });
     if (animation)
       void animation.finished.then(
         () => {
+          if (cancelled) return;
+          element.style.opacity = to;
+          animation.cancel();
           if (!open) setPresent(false);
         },
         () => {},
       );
-    else if (!open) setPresent(false);
+    else {
+      element.style.opacity = to;
+      if (!open) setPresent(false);
+    }
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => {
       if (preference.matches) {
+        element.style.opacity = to;
         animation?.cancel();
         if (!cancelled && !open) setPresent(false);
       }
@@ -36,6 +48,7 @@ export function MenuBackdrop({ open, close }: { open: boolean; close: () => void
     preference.addEventListener("change", update);
     return () => {
       cancelled = true;
+      element.style.opacity = getComputedStyle(element).opacity || element.style.opacity;
       animation?.cancel();
       preference.removeEventListener("change", update);
     };

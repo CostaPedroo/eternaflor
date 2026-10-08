@@ -4,10 +4,11 @@ import type { HTMLAttributes } from "react";
 export function ImageReveal({
   direction = "left",
   trigger = "scroll",
+  children,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   direction?: "left" | "right";
-  trigger?: "scroll" | "load";
+  trigger?: "scroll" | "mount";
 }) {
   return (
     <div
@@ -15,6 +16,10 @@ export function ImageReveal({
       data-image-reveal={direction}
       data-image-trigger={trigger}
       {...(trigger === "scroll" ? { "data-reveal": "image" } : {})}
-    />
+    >
+      <div data-image-scale className="image-reveal-scale h-full w-full">
+        {children}
+      </div>
+    </div>
   );
 }

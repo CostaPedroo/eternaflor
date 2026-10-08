@@ -141,7 +141,7 @@ function Index() {
       >
         <div className="relative lg:order-2 lg:col-span-7">
           <ImageReveal
-            trigger="load"
+            trigger="mount"
             className="image-hover-frame aspect-[4/5] overflow-hidden bg-muted sm:aspect-[5/4] lg:aspect-[4/5]"
           >
             <HeroImage

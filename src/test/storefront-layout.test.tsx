@@ -7,6 +7,12 @@ import { CrossfadeImage } from "@/components/site/CrossfadeImage";
 import { ImageReveal } from "@/components/site/ImageReveal";
 import { MenuBackdrop } from "@/components/site/MenuBackdrop";
 import { motion } from "@/lib/storefront-motion";
+import { StorefrontMotion } from "@/components/site/StorefrontMotion";
+import { ProductCard } from "@/components/site/ProductCard";
+import type { PublicProduct } from "@/lib/catalog.functions";
+vi.mock("@/lib/product-images", () => ({
+  productImagesQuery: (id: string) => ({ queryKey: ["unused", id], queryFn: () => [] }),
+}));
 
 type Played = {
   element: HTMLElement;
@@ -18,6 +24,7 @@ type Played = {
 let played: Played[];
 let reduced: boolean;
 let listeners: Set<() => void>;
+const originalHeight = window.innerHeight;
 
 beforeEach(() => {
   played = [];
@@ -77,6 +84,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  Object.defineProperty(window, "innerHeight", { configurable: true, value: originalHeight });
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
@@ -84,9 +92,11 @@ afterEach(() => {
 
 function items(ids: string[]) {
   return ids.map((id) => (
-    <article key={id} data-product-id={id} data-reveal>
-      <button>{id}</button>
-      <a href={`https://orders.test/${id}`}>Quero {id}</a>
+    <article key={id} data-product-id={id}>
+      <div data-reveal data-card-reveal>
+        <button>{id}</button>
+        <a href={`https://orders.test/${id}`}>Quero {id}</a>
+      </div>
     </article>
   ));
 }
@@ -108,6 +118,91 @@ function Grid() {
 }
 
 describe("Catalogue native FLIP", () => {
+  it("does not shuffle or cancel on same-key rerenders or height-only mobile resize", () => {
+    const ref = createRef<AnimatedGridHandle>();
+    const view = render(<AnimatedGrid ref={ref}>{items(["a", "b"])}</AnimatedGrid>);
+    ref.current?.capture();
+    view.rerender(<AnimatedGrid ref={ref}>{items(["b", "a"])}</AnimatedGrid>);
+    const count = played.length;
+    ref.current?.capture();
+    view.rerender(<AnimatedGrid ref={ref}>{items(["b", "a"])}</AnimatedGrid>);
+    fireEvent(window, new Event("resize"));
+    expect(played).toHaveLength(count);
+    played.forEach((play) => expect(play.animation.cancel).not.toHaveBeenCalled());
+  });
+
+  it("keeps real card reveal and FLIP on different nodes with stable product identities", () => {
+    let intersection!: IntersectionObserverCallback;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          intersection = callback;
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const originalHeight = window.innerHeight;
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 50 });
+    const ref = createRef<AnimatedGridHandle>();
+    const product = (id: string): PublicProduct => ({
+      id,
+      name: id,
+      slug: id,
+      image: "/" + id + ".webp",
+      price: 10,
+      old_price: null,
+      description: null,
+      short_description: null,
+      featured: true,
+      available: true,
+      customizable: true,
+      category_id: null,
+      sort_order: 0,
+      created_at: "2026-10-08",
+    });
+    const page = (ids: string[]) => (
+      <StorefrontMotion>
+        <AnimatedGrid ref={ref}>
+          {ids.map((id) => (
+            <ProductCard key={id} p={product(id)} />
+          ))}
+        </AnimatedGrid>
+      </StorefrontMotion>
+    );
+    const view = render(page(["a", "b"]));
+    const a = document.querySelector<HTMLElement>('[data-product-id="a"]')!;
+    const reveal = a.querySelector<HTMLElement>("[data-card-reveal]")!;
+    const trigger = screen.getByRole("button", { name: "Ver detalhes de a" });
+    act(() =>
+      intersection(
+        [
+          {
+            target: reveal,
+            isIntersecting: true,
+            intersectionRatio: 0.2,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      ),
+    );
+    expect(reveal).toHaveAttribute("data-revealed", "animate");
+    expect(a).not.toHaveAttribute("data-reveal");
+    ref.current?.capture();
+    view.rerender(page(["b", "a"]));
+    expect(screen.getByRole("button", { name: "Ver detalhes de a" })).toBe(trigger);
+    expect(played.some((play) => play.element === a)).toBe(true);
+    expect(played.some((play) => play.element === reveal)).toBe(false);
+    expect(reveal).toHaveAttribute("data-revealed", "animate");
+    fireEvent.animationEnd(reveal);
+    expect(reveal).toHaveAttribute("data-revealed", "done");
+    const count = played.length;
+    view.rerender(page(["b", "a"]));
+    expect(played).toHaveLength(count);
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: originalHeight });
+  });
   it("smoothly shrinks rows through an empty result without making exiting cards interactive", () => {
     const ref = createRef<AnimatedGridHandle>();
     const view = render(<AnimatedGrid ref={ref}>{items(["a", "b", "c"])}</AnimatedGrid>);
@@ -157,6 +252,7 @@ describe("Catalogue native FLIP", () => {
     expect(ghost).toHaveAttribute("aria-hidden", "true");
     expect(ghost.inert).toBe(true);
     expect(ghost.querySelector("button")).toHaveAttribute("tabindex", "-1");
+    expect(ghost.querySelector("[data-card-reveal]")).toHaveAttribute("data-revealed", "immediate");
     expect(played.find((play) => play.element === ghost)?.frames[1]).toMatchObject({
       opacity: 0,
       transform: "translateY(8px) scale(0.97)",
@@ -243,6 +339,29 @@ describe("Decoded gallery crossfade", () => {
   const photo = (src: string) => (
     <CrossfadeImage src={src} alt="Fotografia atual" onError={vi.fn()} />
   );
+  it("does not animate initial load, repeated load/decode events or same-source rerenders", async () => {
+    const view = render(photo("/a.webp"));
+    const initial = screen.getByAltText("Fotografia atual");
+    expect(initial).not.toHaveStyle({ opacity: "0" });
+    fireEvent.load(initial);
+    view.rerender(photo("/a.webp"));
+    fireEvent.load(initial);
+    expect(played).toHaveLength(0);
+    expect(screen.getByAltText("Fotografia atual")).toBe(initial);
+    view.rerender(photo("/b.webp"));
+    const next = screen.getByAltText("Fotografia atual");
+    fireEvent.load(next);
+    const count = played.length;
+    expect(count).toBe(2);
+    view.rerender(photo("/b.webp"));
+    fireEvent.load(next);
+    expect(played).toHaveLength(count);
+    await act(async () => {
+      played.forEach((play) => play.finish());
+    });
+    played.forEach((play) => expect(play.animation.cancel).toHaveBeenCalled());
+    expect(next).not.toHaveStyle({ opacity: "0" });
+  });
   it("retains the old photo through loading, then animates both layers", async () => {
     const view = render(photo("/a.webp"));
     fireEvent.load(screen.getByAltText("Fotografia atual"));
@@ -315,10 +434,11 @@ describe("Editorial masks and mobile menu", () => {
     view.rerender(<MenuBackdrop open close={close} />);
     fireEvent.click(document.querySelector(".storefront-menu-backdrop")!);
     expect(close).toHaveBeenCalled();
+    await act(async () => played.at(-1)!.finish());
     view.rerender(<MenuBackdrop open={false} close={close} />);
     const closing = played.at(-1)!;
     expect(document.querySelector(".storefront-menu-backdrop")).not.toBeNull();
-    expect(closing.frames).toEqual([{ opacity: 1 }, { opacity: 0 }]);
+    expect(closing.frames).toEqual([{ opacity: "1" }, { opacity: "0" }]);
     view.rerender(<MenuBackdrop open close={close} />);
     expect(closing.animation.cancel).toHaveBeenCalled();
     await act(async () => closing.finish());

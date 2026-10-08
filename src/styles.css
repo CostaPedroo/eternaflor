@@ -243,16 +243,6 @@
     clip-path: inset(0 0 0 0);
   }
 }
-/* A separate initial name avoids re-hiding a server-painted cached hero.
-   A pending image switches to the decode-ready reveal instead. */
-@keyframes storefront-image-initial {
-  from {
-    clip-path: var(--image-clip-start);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
 @keyframes storefront-image-scale {
   from {
     transform: scale(var(--image-scale));
@@ -346,6 +336,10 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
+  /* Only genuinely offscreen elements are prepared; visible SSR content stays visible. */
+  .storefront-motion [data-reveal][data-revealed="waiting"] {
+    opacity: 0;
+  }
   .storefront-motion [data-reveal]:not([data-reveal="image"])[data-revealed="animate"] {
     animation: storefront-reveal var(--reveal-duration) var(--storefront-ease)
       min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
@@ -354,35 +348,22 @@
     animation: storefront-image-uncover var(--motion-image) var(--storefront-ease)
       min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
   }
-  .storefront-motion [data-reveal="image"][data-revealed="animate"] .editorial-image {
+  .storefront-motion
+    [data-reveal="image"]:is([data-revealed="animate"], [data-revealed="done"])
+    > [data-image-scale]:not([data-motion-complete]) {
     animation: storefront-image-scale var(--motion-image) var(--storefront-ease)
       min(var(--reveal-delay, 0ms), var(--stagger-limit)) backwards;
   }
-  .storefront-motion
-    [data-image-trigger="load"]:not([data-image-phase="loading"]):not(
-      [data-image-phase="ready"]
-    ):not([data-image-phase="failed"]) {
-    animation: storefront-image-initial var(--motion-image) var(--storefront-ease)
+  /* One SSR/client timeline. Load/decode/fallback never select another animation. */
+  .storefront-motion [data-image-trigger="mount"]:not([data-motion-complete]) {
+    animation: storefront-image-uncover var(--motion-image) var(--storefront-ease)
       var(--hero-image-delay) backwards;
   }
-  .storefront-motion [data-image-trigger="load"][data-image-phase="ready"] {
-    animation: storefront-image-uncover var(--motion-image) var(--storefront-ease) backwards;
-  }
-  .storefront-motion
-    [data-image-trigger="load"]
-    .hero-image:not([data-image-state="loading"]):not([data-image-state="ready"]) {
+  .storefront-motion [data-image-trigger="mount"] > [data-image-scale]:not([data-motion-complete]) {
     animation: storefront-image-scale var(--motion-image) var(--storefront-ease)
       var(--hero-image-delay) backwards;
   }
-  .storefront-motion .hero-image[data-image-state="loading"] {
-    opacity: 0;
-  }
-  .storefront-motion .hero-image[data-image-state="ready"] {
-    animation:
-      storefront-image-scale var(--motion-image) var(--storefront-ease) backwards,
-      storefront-fade var(--motion-gallery) var(--storefront-ease) backwards;
-  }
-  .storefront-motion [data-hero]:not([data-hero="image"]) {
+  .storefront-motion [data-hero]:not([data-hero="image"]):not([data-motion-complete]) {
     animation: storefront-reveal var(--motion-hero) var(--storefront-ease) backwards;
   }
   .storefront-motion [data-hero="title"] {
@@ -398,15 +379,13 @@
   .storefront-motion [data-hero="label"] {
     animation-delay: var(--hero-label-delay);
   }
-  .storefront-motion [data-hero]:focus-within,
-  .storefront-motion [data-follow-reveal]:focus-visible {
-    animation: none;
-  }
-  .storefront-motion [data-revealed="animate"] [data-follow-reveal] {
+  .storefront-motion
+    :is([data-revealed="animate"], [data-revealed="done"])
+    [data-follow-reveal]:not([data-motion-complete]) {
     animation: storefront-fade var(--motion-heading) var(--storefront-ease)
       calc(var(--reveal-delay, 0ms) + var(--item-stagger)) backwards;
   }
-  .storefront-motion [data-page-entry] {
+  .storefront-motion [data-page-entry]:not([data-motion-complete]) {
     animation: storefront-page var(--motion-page) var(--storefront-ease) backwards;
   }
   .storefront-motion :is(button:not(:disabled), a):active,
@@ -437,11 +416,15 @@
   .storefront-motion [data-storefront-accordion][data-state="closed"] {
     animation: storefront-faq-close var(--motion-menu) var(--storefront-ease) forwards;
   }
-  .storefront-dialog[data-state="open"] {
+  .storefront-dialog[data-state="open"]:not([data-motion-complete]) {
     animation: storefront-fade var(--motion-interaction) ease-out;
   }
-  .storefront-overlay[data-state="open"] {
+  .storefront-overlay[data-state="open"]:not([data-motion-complete]) {
     animation: storefront-fade var(--motion-interaction) ease-out;
+  }
+  .storefront-dialog[data-state="open"][data-motion-complete],
+  .storefront-overlay[data-state="open"][data-motion-complete] {
+    animation: none;
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {

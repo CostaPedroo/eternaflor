@@ -68,6 +68,23 @@ export function reducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+export const onceEntranceSelector =
+  '[data-hero]:not([data-hero="image"]), [data-page-entry], [data-image-trigger="mount"], [data-image-scale], [data-follow-reveal]';
+
+/** Terminal DOM states survive rerenders, effect replay and queued observer callbacks. */
+export function completeReveal(element: HTMLElement, state: "done" | "immediate" = "done") {
+  if (!["done", "immediate"].includes(element.dataset["revealed"] ?? ""))
+    element.dataset["revealed"] = state;
+  if (state === "immediate")
+    element
+      .querySelectorAll<HTMLElement>("[data-image-scale], [data-follow-reveal]")
+      .forEach(completeEntrance);
+}
+
+export function completeEntrance(element: HTMLElement) {
+  element.dataset["motionComplete"] = "true";
+}
+
 /** No timers, and a functional immediate fallback in browsers without WAAPI. */
 export function animatePhotoOrLayout(
   element: HTMLElement,
