@@ -157,7 +157,7 @@ function Catalogo() {
         </p>
         <AnimatedGrid
           ref={grid}
-          className="mt-8 grid grid-cols-1 gap-x-4 gap-y-12 min-[360px]:grid-cols-2 md:gap-x-10 md:gap-y-16 lg:grid-cols-3 xl:grid-cols-4"
+          className="mt-8 grid grid-cols-1 items-stretch gap-x-4 gap-y-12 min-[360px]:grid-cols-2 md:gap-x-10 md:gap-y-16 lg:grid-cols-3 xl:grid-cols-4"
         >
           {visible.map((p, i) => (
             <ProductCard key={p.id} p={p} revealDelay={(i % 4) * motion.stagger.item} />
