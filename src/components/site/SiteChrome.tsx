@@ -5,10 +5,11 @@ import { Menu, MessageCircle, X } from "lucide-react";
 import { wa, INSTAGRAM, TIKTOK } from "@/lib/config";
 import { MenuBackdrop } from "@/components/site/MenuBackdrop";
 
-type NavItem = { label: string; to: "/" | "/catalogo"; hash?: string };
+type NavItem = { label: string; to: "/" | "/catalogo" | "/galeria"; hash?: string };
 const nav: NavItem[] = [
   { label: "Início", to: "/" },
   { label: "Catálogo", to: "/catalogo" },
+  { label: "Galeria", to: "/galeria" },
   { label: "Personalizados", to: "/", hash: "personalizados" },
   { label: "FAQ", to: "/", hash: "faq" },
 ];
@@ -28,6 +29,7 @@ export function SiteHeader() {
               <Link
                 key={n.label}
                 to={n.to}
+                {...(n.to === "/galeria" ? { preload: false } : {})}
                 {...(n.hash ? { hash: n.hash } : {})}
                 className="storefront-nav-link transition-colors hover:text-sage"
               >
@@ -55,6 +57,7 @@ export function SiteHeader() {
               <Link
                 key={n.label}
                 to={n.to}
+                {...(n.to === "/galeria" ? { preload: false } : {})}
                 {...(n.hash ? { hash: n.hash } : {})}
                 onClick={() => setOpen(false)}
                 className="block border-b border-border/60 py-4 font-serif text-2xl last:border-0"
@@ -87,6 +90,9 @@ export function SiteFooter() {
         </div>
         <nav className="flex flex-wrap gap-x-8 gap-y-3 text-[10px] uppercase tracking-[0.25em]">
           <Link to="/catalogo">Catálogo</Link>
+          <Link to="/galeria" preload={false}>
+            Galeria
+          </Link>
           <a href={wa("Olá!")} target="_blank" rel="noreferrer">
             WhatsApp
           </a>

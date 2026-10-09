@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutGrid, Package, Tags, LogOut, Settings } from "lucide-react";
+import { LayoutGrid, Package, Tags, LogOut, Settings, Images } from "lucide-react";
 import { supabase } from "@/integrations/external/client";
 import { isCurrentUserAdmin } from "@/lib/admin";
 
@@ -23,6 +23,7 @@ const links = [
   { to: "/admin", label: "Início", icon: LayoutGrid, exact: true },
   { to: "/admin/produtos", label: "Produtos", icon: Package, exact: false },
   { to: "/admin/categorias", label: "Categorias", icon: Tags, exact: false },
+  { to: "/admin/galeria", label: "Galeria", icon: Images, exact: false },
   { to: "/admin/definicoes", label: "Definições", icon: Settings, exact: false },
 ] as const;
 
@@ -59,7 +60,7 @@ function AdminLayout() {
       <main className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
         <Outlet />
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-background md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-background md:hidden">
         {links.map((l) => (
           <Link key={l.to} to={l.to} activeOptions={{ exact: l.exact }} className="flex flex-col items-center gap-1 py-3 text-xs text-muted-foreground" activeProps={{ className: "text-foreground font-medium" }}>
             <l.icon className="h-5 w-5" />

@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_images: {
+        Row: {
+          id: string
+          image_url: string
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          width: number
+          height: number
+        }
+        Insert: {
+          id?: string
+          image_url: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          width: number
+          height: number
+        }
+        Update: {
+          id?: string
+          image_url?: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          width?: number
+          height?: number
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           alt_text: string | null
@@ -181,6 +211,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      reorder_gallery_images: {
+        Args: { _ids: string[] }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCategoriasRouteImport } from './routes/admin.categorias'
 import { Route as AdminDefinicoesRouteImport } from './routes/admin.definicoes'
+import { Route as AdminGaleriaRouteImport } from './routes/admin.galeria'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as AdminProdutosIndexRouteImport } from './routes/admin.produtos.index'
 import { Route as AdminProdutosIdRouteImport } from './routes/admin.produtos.$id'
@@ -35,6 +37,11 @@ const CatalogoRoute = CatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GaleriaRoute = GaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -48,6 +55,11 @@ const AdminCategoriasRoute = AdminCategoriasRouteImport.update({
 const AdminDefinicoesRoute = AdminDefinicoesRouteImport.update({
   id: '/definicoes',
   path: '/definicoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGaleriaRoute = AdminGaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -75,8 +87,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
+  '/galeria': typeof GaleriaRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/definicoes': typeof AdminDefinicoesRoute
+  '/admin/galeria': typeof AdminGaleriaRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/produtos/$id': typeof AdminProdutosIdRoute
@@ -86,8 +100,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/catalogo': typeof CatalogoRoute
+  '/galeria': typeof GaleriaRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/definicoes': typeof AdminDefinicoesRoute
+  '/admin/galeria': typeof AdminGaleriaRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
   '/admin/produtos/$id': typeof AdminProdutosIdRoute
@@ -99,8 +115,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
+  '/galeria': typeof GaleriaRoute
   '/admin/categorias': typeof AdminCategoriasRoute
   '/admin/definicoes': typeof AdminDefinicoesRoute
+  '/admin/galeria': typeof AdminGaleriaRoute
   '/admin_/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/produtos/$id': typeof AdminProdutosIdRoute
@@ -113,8 +131,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogo'
+    | '/galeria'
     | '/admin/categorias'
     | '/admin/definicoes'
+    | '/admin/galeria'
     | '/admin/login'
     | '/admin/'
     | '/admin/produtos/$id'
@@ -124,8 +144,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/catalogo'
+    | '/galeria'
     | '/admin/categorias'
     | '/admin/definicoes'
+    | '/admin/galeria'
     | '/admin/login'
     | '/admin'
     | '/admin/produtos/$id'
@@ -136,8 +158,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogo'
+    | '/galeria'
     | '/admin/categorias'
     | '/admin/definicoes'
+    | '/admin/galeria'
     | '/admin_/login'
     | '/admin/'
     | '/admin/produtos/$id'
@@ -149,6 +173,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CatalogoRoute: typeof CatalogoRoute
+  GaleriaRoute: typeof GaleriaRoute
   AdminLoginRoute: typeof AdminLoginRoute
 }
 
@@ -175,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/galeria': {
+      id: '/galeria'
+      path: '/galeria'
+      fullPath: '/galeria'
+      preLoaderRoute: typeof GaleriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -194,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/definicoes'
       fullPath: '/admin/definicoes'
       preLoaderRoute: typeof AdminDefinicoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/galeria': {
+      id: '/admin/galeria'
+      path: '/galeria'
+      fullPath: '/admin/galeria'
+      preLoaderRoute: typeof AdminGaleriaRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin_/login': {
@@ -230,6 +269,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCategoriasRoute: typeof AdminCategoriasRoute
   AdminDefinicoesRoute: typeof AdminDefinicoesRoute
+  AdminGaleriaRoute: typeof AdminGaleriaRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProdutosIdRoute: typeof AdminProdutosIdRoute
   AdminProdutosNovoRoute: typeof AdminProdutosNovoRoute
@@ -239,6 +279,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriasRoute: AdminCategoriasRoute,
   AdminDefinicoesRoute: AdminDefinicoesRoute,
+  AdminGaleriaRoute: AdminGaleriaRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminProdutosIdRoute: AdminProdutosIdRoute,
   AdminProdutosNovoRoute: AdminProdutosNovoRoute,
@@ -251,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CatalogoRoute: CatalogoRoute,
+  GaleriaRoute: GaleriaRoute,
   AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport

@@ -3,6 +3,8 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { wa, INSTAGRAM, TIKTOK, formatPrice } from "@/lib/config";
 import { publicProductsQuery } from "@/lib/catalog.functions";
 import { publicSiteSettingsQuery } from "@/lib/site-settings";
+import { galleryPreviewQuery } from "@/lib/gallery.functions";
+import { GalleryPreview } from "@/components/site/GalleryPreview";
 import { useState, type FormEvent } from "react";
 import { MessageCircle, Instagram } from "lucide-react";
 import {
@@ -26,11 +28,14 @@ const DESC =
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    const [products, settings] = await Promise.all([
+    const [products, settings, gallery] = await Promise.all([
       context.queryClient.ensureQueryData(publicProductsQuery),
       context.queryClient.fetchQuery(publicSiteSettingsQuery).catch(() => null),
+      context.queryClient
+        .fetchQuery(galleryPreviewQuery)
+        .catch(() => ({ images: [], unavailable: true })),
     ]);
-    return { products, settings };
+    return { products, settings, gallery };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -228,6 +233,8 @@ function Index() {
       </section>
 
       <CustomSection imageUrl={settingsError ? null : settings?.custom_bouquet_image_url} />
+
+      <GalleryPreview initial={initial.gallery} />
 
       {/* Social */}
       <section className="border-t border-border">

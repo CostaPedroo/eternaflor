@@ -13,8 +13,9 @@ vi.mock("@tanstack/react-router", async (original) => ({
   Link: ({
     to,
     hash,
+    preload: _preload,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { to: string; hash?: string }) => (
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & { to: string; hash?: string; preload?: false }) => (
     <a {...props} href={`${to}${hash ? `#${hash}` : ""}`} />
   ),
 }));
@@ -34,6 +35,14 @@ vi.mock("@/lib/site-settings", () => ({
     refetchOnMount: false,
     refetchInterval: 60_000,
     retry: false,
+  },
+}));
+vi.mock("@/lib/gallery.functions", () => ({
+  galleryPreviewQuery: {
+    queryKey: ["public-gallery", "preview"],
+    queryFn: () => ({ images: [], unavailable: false }),
+    staleTime: 60_000,
+    refetchOnMount: false,
   },
 }));
 vi.mock("@/lib/product-images", () => ({
@@ -82,6 +91,7 @@ function page(children: ReactNode) {
   vi.spyOn(HomeRoute, "useLoaderData").mockReturnValue({
     products: [product, { ...product, id: "tulipa", name: "Tulipa", price: 10 }],
     settings: null,
+    gallery: { images: [], unavailable: false },
   });
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
