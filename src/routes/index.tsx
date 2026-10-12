@@ -160,7 +160,7 @@ function Index() {
             className="absolute bottom-0 left-0 border border-blush bg-background px-5 py-4 xl:bottom-8 xl:-translate-x-1/4 xl:p-8"
           >
             <span className="text-[10px] uppercase tracking-[0.2em] text-sage xl:text-xs">
-              Coleção permanente
+              Nova Coleção
             </span>
             <p className="mt-1 font-serif text-xl xl:mt-2 xl:text-2xl">
               {minPrice != null ? `A partir de ${formatPrice(minPrice)}` : "Feito à mão"}
