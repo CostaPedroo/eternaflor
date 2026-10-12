@@ -8,6 +8,7 @@ import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { AnimatedGrid, type AnimatedGridHandle } from "@/components/site/AnimatedGrid";
 import { motion } from "@/lib/storefront-motion";
 import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
+import { belongsToCategory } from "@/lib/product-categories";
 
 const TITLE = "Catálogo | Eterna Flor";
 const DESC =
@@ -50,8 +51,15 @@ const norm = (s: string | null | undefined) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 function Catalogo() {
-  const { data: products } = useSuspenseQuery(publicProductsQuery);
-  const { data: categories } = useSuspenseQuery(publicCategoriesQuery);
+  const [initialProducts, initialCategories] = Route.useLoaderData();
+  const { data: products } = useSuspenseQuery({
+    ...publicProductsQuery,
+    initialData: initialProducts,
+  });
+  const { data: categories } = useSuspenseQuery({
+    ...publicCategoriesQuery,
+    initialData: initialCategories,
+  });
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("rec");
@@ -61,7 +69,7 @@ function Catalogo() {
     const term = norm(q.trim());
     const list = products.filter((p) => {
       if (filter === UNDER_15 && p.price > 15) return false;
-      if (filter !== "all" && filter !== UNDER_15 && p.category_id !== filter) return false;
+      if (filter !== "all" && filter !== UNDER_15 && !belongsToCategory(p, filter)) return false;
       if (term && ![p.name, p.short_description, p.description].some((v) => norm(v).includes(term)))
         return false;
       return true;

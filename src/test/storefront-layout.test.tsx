@@ -159,7 +159,7 @@ describe("Catalogue native FLIP", () => {
       featured: true,
       available: true,
       customizable: true,
-      category_id: null,
+      categories: [],
       sort_order: 0,
       created_at: "2026-10-08",
     });

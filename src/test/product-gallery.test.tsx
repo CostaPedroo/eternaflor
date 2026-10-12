@@ -25,7 +25,7 @@ const product: PublicProduct = {
   featured: true,
   customizable: true,
   available: true,
-  category_id: null,
+  categories: [],
   sort_order: 0,
   created_at: "2026-10-07",
 };

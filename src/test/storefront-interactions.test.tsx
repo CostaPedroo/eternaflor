@@ -71,13 +71,14 @@ const product: PublicProduct = {
   featured: true,
   customizable: true,
   available: true,
-  category_id: null,
+  categories: [],
   sort_order: 0,
   created_at: "2026-10-07",
 };
 const clients: QueryClient[] = [];
 beforeEach(() => {
   settingsRead.mockReset().mockResolvedValue(null);
+  vi.spyOn(CatalogRoute, "useLoaderData").mockReturnValue([[], []]);
 });
 function page(children: ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -102,6 +103,87 @@ afterEach(() => {
 });
 
 describe("Public pages with motion", () => {
+  it("keeps multi-category cards unique through category, price, search and sort combinations", () => {
+    const client = new QueryClient();
+    clients.push(client);
+    const boxes = { id: "caixas", name: "Caixas", slug: "caixas" };
+    const custom = { id: "personalizados", name: "Personalizados", slug: "personalizados" };
+    client.setQueryData(
+      ["public-products"],
+      [
+        {
+          ...product,
+          id: "multi",
+          name: "Caixa de Flores",
+          categories: [boxes, custom],
+          price: 30,
+          sort_order: 0,
+        },
+        {
+          ...product,
+          id: "small",
+          name: "Flor Rosa",
+          categories: [custom],
+          price: 10,
+          sort_order: 1,
+        },
+        { ...product, id: "uncat", name: "Tulipa", categories: [], price: 12, sort_order: 2 },
+      ],
+    );
+    client.setQueryData(["public-categories"], [boxes, custom]);
+    render(
+      <QueryClientProvider client={client}>
+        <Catalog />
+      </QueryClientProvider>,
+    );
+    const ids = () =>
+      [...document.querySelectorAll<HTMLElement>("article[data-product-id]")].map(
+        (node) => node.dataset["productId"],
+      );
+    expect(ids()).toEqual(["multi", "small", "uncat"]);
+    fireEvent.click(screen.getByRole("button", { name: "Caixas" }));
+    expect(ids()).toEqual(["multi"]);
+    fireEvent.click(screen.getByRole("button", { name: "Personalizados" }));
+    expect(ids()).toEqual(["multi", "small"]);
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "asc" } });
+    expect(ids()).toEqual(["small", "multi"]);
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "caixa" } });
+    expect(ids()).toEqual(["multi"]);
+    fireEvent.click(screen.getByRole("button", { name: "Todos" }));
+    expect(ids()).toEqual(["multi"]);
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "" } });
+    expect(ids()).toEqual(["small", "uncat", "multi"]);
+    fireEvent.click(screen.getByRole("button", { name: "Até 15€" }));
+    expect(ids()).toEqual(["small", "uncat"]);
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "desc" } });
+    expect(ids()).toEqual(["uncat", "small"]);
+    expect(screen.getByText("2 produtos")).toBeInTheDocument();
+    expect(new Set(ids()).size).toBe(ids().length);
+  });
+  it("shows a multi-category featured product only once on the homepage", () => {
+    const client = new QueryClient();
+    clients.push(client);
+    const featured = {
+      ...product,
+      categories: [
+        { id: "a", name: "Bouquets", slug: "bouquets" },
+        { id: "b", name: "Personalizados", slug: "personalizados" },
+      ],
+    };
+    client.setQueryData(["public-products"], [featured]);
+    client.setQueryData(["site-settings"], null);
+    vi.spyOn(HomeRoute, "useLoaderData").mockReturnValue({
+      products: [featured],
+      settings: null,
+      gallery: { images: [], unavailable: false },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <Home />
+      </QueryClientProvider>,
+    );
+    expect(document.querySelectorAll(`article[data-product-id="${product.id}"]`)).toHaveLength(1);
+  });
   it("handles Todos → Bouquets → Até 15€ → Caixas and combined search/sort without stale actions", () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
     const client = new QueryClient();
@@ -109,13 +191,13 @@ describe("Public pages with motion", () => {
     client.setQueryData(
       ["public-products"],
       [
-        { ...product, category_id: "bouquets" },
+        { ...product, categories: [{ id: "bouquets", name: "Bouquets", slug: "bouquets" }] },
         {
           ...product,
           id: "tulipa",
           name: "Tulipa",
           price: 10,
-          category_id: "bouquets",
+          categories: [{ id: "bouquets", name: "Bouquets", slug: "bouquets" }],
           sort_order: 1,
         },
         {
@@ -123,7 +205,7 @@ describe("Public pages with motion", () => {
           id: "caixa",
           name: "Caixa Jardim",
           price: 30,
-          category_id: "caixas",
+          categories: [{ id: "caixas", name: "Caixas", slug: "caixas" }],
           sort_order: 2,
         },
         {
@@ -131,7 +213,7 @@ describe("Public pages with motion", () => {
           id: "caixa-rosa",
           name: "Caixa Rosa",
           price: 12,
-          category_id: "caixas",
+          categories: [{ id: "caixas", name: "Caixas", slug: "caixas" }],
           sort_order: 3,
         },
       ],

@@ -71,6 +71,27 @@ export type Database = {
         }
         Relationships: []
       }
+      product_categories: {
+        Row: { product_id: string; category_id: string; created_at: string }
+        Insert: { product_id: string; category_id: string; created_at?: string }
+        Update: { product_id?: string; category_id?: string; created_at?: string }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           alt_text: string | null
@@ -211,16 +232,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      save_product_with_categories: {
+        Args: { _product_id: string | null; _product: Json; _category_ids: string[] }
+        Returns: string
+      }
+      duplicate_product_with_categories: {
+        Args: { _source_id: string; _name: string; _slug: string }
+        Returns: string
+      }
       reorder_gallery_images: {
         Args: { _ids: string[] }
         Returns: undefined
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
       }
     }
     Enums: {

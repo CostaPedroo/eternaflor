@@ -4,7 +4,15 @@ import { useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Star, ArrowLeft, ArrowRight, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/external/client";
-import { friendlyError, resolveImageUrls, uniqueSlug, uploadProductImage, type Product } from "@/lib/admin";
+import {
+  friendlyError,
+  resolveImageUrls,
+  saveProductWithCategories,
+  uniqueSlug,
+  uploadProductImage,
+  type Product,
+} from "@/lib/admin";
+import { categorySelectionError, selectedCategoryIds } from "@/lib/product-categories";
 
 type Img = { key: string; path?: string; file?: File; preview: string };
 
@@ -15,12 +23,16 @@ export function ProductForm({ product, initialImages = [] }: Props) {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const savedId = useRef(product?.id ?? null);
+  const savingRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [images, setImages] = useState<Img[]>(initialImages.map((i) => ({ key: i.path, path: i.path, preview: i.preview })));
+  const [images, setImages] = useState<Img[]>(
+    initialImages.map((i) => ({ key: i.path, path: i.path, preview: i.preview })),
+  );
   const [v, setV] = useState({
     name: product?.name ?? "",
-    category_id: product?.category_id ?? "",
+    category_ids: product ? selectedCategoryIds(product) : ([] as string[]),
     short_description: product?.short_description ?? "",
     description: product?.description ?? "",
     price: product ? String(product.price) : "",
@@ -30,18 +42,34 @@ export function ProductForm({ product, initialImages = [] }: Props) {
     featured: product?.featured ?? false,
     customizable: product?.customizable ?? true,
   });
-  const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((s) => ({ ...s, [k]: val }));
+  const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) =>
+    setV((s) => ({ ...s, [k]: val }));
 
-  const { data: categories } = useQuery({
+  const {
+    data: categories,
+    isPending: categoriesPending,
+    isError: categoriesError,
+    refetch: reloadCategories,
+  } = useQuery({
     queryKey: ["admin", "categories"],
-    queryFn: async () => (await supabase.from("categories").select("*").order("sort_order")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("*").order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 
   const addFiles = (files: FileList | File[] | null) => {
     if (!files) return;
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    setImages((s) => [...s, ...list.map((f) => ({ key: crypto.randomUUID(), file: f, preview: URL.createObjectURL(f) }))]);
-    if (list.length) toast.success(list.length > 1 ? `${list.length} fotografias adicionadas.` : "Fotografia adicionada.");
+    setImages((s) => [
+      ...s,
+      ...list.map((f) => ({ key: crypto.randomUUID(), file: f, preview: URL.createObjectURL(f) })),
+    ]);
+    if (list.length)
+      toast.success(
+        list.length > 1 ? `${list.length} fotografias adicionadas.` : "Fotografia adicionada.",
+      );
   };
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -60,17 +88,33 @@ export function ProductForm({ product, initialImages = [] }: Props) {
   const removeImg = (i: number) => setImages((s) => s.filter((_, k) => k !== i));
 
   const save = async (publish: boolean) => {
-    if (!v.name.trim()) { toast.error("Escreve o nome do produto."); return; }
+    if (savingRef.current) return;
+    if (!v.name.trim()) {
+      toast.error("Escreve o nome do produto.");
+      return;
+    }
     const price = Number(v.price.replace(",", "."));
-    if (!v.price || Number.isNaN(price) || price < 0) { toast.error("Indica um preço válido."); return; }
+    if (!v.price || Number.isNaN(price) || price < 0) {
+      toast.error("Indica um preço válido.");
+      return;
+    }
+    if (categoriesPending || categoriesError) {
+      toast.error("Não foi possível verificar as categorias. Tenta carregar novamente.");
+      return;
+    }
+    const selectionError = categorySelectionError(v.category_ids, categories ?? []);
+    if (selectionError) {
+      toast.error(selectionError);
+      return;
+    }
     const oldPrice = v.old_price ? Number(v.old_price.replace(",", ".")) : null;
     setSaving(true);
+    savingRef.current = true;
     try {
-      const slug = await uniqueSlug("products", v.name, product?.id);
+      const slug = await uniqueSlug("products", v.name, savedId.current ?? undefined);
       const payload = {
         name: v.name.trim(),
         slug,
-        category_id: v.category_id || null,
         short_description: v.short_description.trim() || null,
         description: v.description.trim() || null,
         price,
@@ -80,20 +124,23 @@ export function ProductForm({ product, initialImages = [] }: Props) {
         featured: v.featured,
         customizable: v.customizable,
       };
-      let id = product?.id;
-      if (id) {
-        const { error } = await supabase.from("products").update(payload).eq("id", id);
-        if (error) throw error;
-      } else {
-        const { data: last } = await supabase.from("products").select("sort_order").order("sort_order", { ascending: false }).limit(1).maybeSingle();
-        const { data, error } = await supabase
+      let sortOrder: number | undefined;
+      if (!savedId.current) {
+        const { data: last } = await supabase
           .from("products")
-          .insert({ ...payload, sort_order: (last?.sort_order ?? 0) + 10 })
-          .select("id")
-          .single();
-        if (error) throw error;
-        id = data.id;
+          .select("sort_order")
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        sortOrder = (last?.sort_order ?? 0) + 10;
       }
+      const id = await saveProductWithCategories(
+        savedId.current,
+        { ...payload, ...(sortOrder !== undefined ? { sort_order: sortOrder } : {}) },
+        v.category_ids,
+      );
+      // If later photo work fails, retry updates this draft instead of inserting a duplicate.
+      savedId.current = id;
       // Upload new photos and store the final order.
       const paths: string[] = [];
       for (const img of images) {
@@ -101,26 +148,47 @@ export function ProductForm({ product, initialImages = [] }: Props) {
       }
       await supabase.from("product_images").delete().eq("product_id", id!);
       if (paths.length) {
-        const { error } = await supabase.from("product_images").insert(
-          paths.map((p, i) => ({ product_id: id!, image_url: p, alt_text: payload.name, sort_order: i })),
-        );
+        const { error } = await supabase
+          .from("product_images")
+          .insert(
+            paths.map((p, i) => ({
+              product_id: id!,
+              image_url: p,
+              alt_text: payload.name,
+              sort_order: i,
+            })),
+          );
         if (error) throw error;
       }
-      const { error: mErr } = await supabase.from("products").update({ main_image: paths[0] ?? null }).eq("id", id!);
+      const { error: mErr } = await supabase
+        .from("products")
+        .update({ main_image: paths[0] ?? null })
+        .eq("id", id!);
       if (mErr) throw mErr;
 
-      qc.invalidateQueries({ queryKey: ["admin"] });
-      qc.invalidateQueries({ queryKey: ["public-products"] });
-      toast.success(publish ? "Produto publicado com sucesso." : product ? "Produto atualizado." : "Produto guardado com sucesso.");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["admin"] }),
+        qc.invalidateQueries({ queryKey: ["public-products"] }),
+      ]);
+      toast.success(
+        publish
+          ? "Produto publicado com sucesso."
+          : product
+            ? "Produto atualizado."
+            : "Produto guardado com sucesso.",
+      );
       navigate({ to: "/admin/produtos" });
     } catch (e) {
       console.error(e);
       toast.error(friendlyError());
       setSaving(false);
+    } finally {
+      savingRef.current = false;
     }
   };
 
-  const input = "mt-2 h-12 w-full border border-border bg-background px-4 text-base outline-none focus:border-primary";
+  const input =
+    "mt-2 h-12 w-full border border-border bg-background px-4 text-base outline-none focus:border-primary";
   const label = "block text-sm font-medium";
 
   return (
@@ -131,34 +199,104 @@ export function ProductForm({ product, initialImages = [] }: Props) {
       <section className="space-y-3 border border-border bg-background p-4">
         <p className={label}>Fotografias</p>
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={`grid grid-cols-2 gap-2 border-2 border-dashed p-3 ${dragOver ? "border-primary bg-muted" : "border-border"}`}
         >
-          <button type="button" onClick={() => cameraRef.current?.click()} className="flex h-24 flex-col items-center justify-center gap-1 bg-muted text-sm">
+          <button
+            type="button"
+            onClick={() => cameraRef.current?.click()}
+            className="flex h-24 flex-col items-center justify-center gap-1 bg-muted text-sm"
+          >
             <Camera className="h-6 w-6" /> Tirar fotografia
           </button>
-          <button type="button" onClick={() => fileRef.current?.click()} className="flex h-24 flex-col items-center justify-center gap-1 bg-muted text-sm">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex h-24 flex-col items-center justify-center gap-1 bg-muted text-sm"
+          >
             <ImagePlus className="h-6 w-6" /> Escolher da galeria
           </button>
-          <p className="col-span-2 hidden text-center text-xs text-muted-foreground md:block">ou arrasta as fotografias para aqui</p>
+          <p className="col-span-2 hidden text-center text-xs text-muted-foreground md:block">
+            ou arrasta as fotografias para aqui
+          </p>
         </div>
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            addFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            addFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
         {images.length > 0 && (
           <ul className="grid grid-cols-3 gap-2 md:grid-cols-5">
             {images.map((img, i) => (
               <li key={img.key} className="relative">
-                <div className={`aspect-square overflow-hidden bg-muted ${i === 0 ? "ring-2 ring-primary" : ""}`}>
+                <div
+                  className={`aspect-square overflow-hidden bg-muted ${i === 0 ? "ring-2 ring-primary" : ""}`}
+                >
                   <img src={img.preview} alt="" className="h-full w-full object-cover" />
                 </div>
-                {i === 0 && <span className="absolute left-1 top-1 bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">Principal</span>}
-                <button type="button" aria-label="Remover" onClick={() => removeImg(i)} className="absolute right-1 top-1 grid h-7 w-7 place-items-center bg-background/90"><X className="h-4 w-4" /></button>
+                {i === 0 && (
+                  <span className="absolute left-1 top-1 bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">
+                    Principal
+                  </span>
+                )}
+                <button
+                  type="button"
+                  aria-label="Remover"
+                  onClick={() => removeImg(i)}
+                  className="absolute right-1 top-1 grid h-7 w-7 place-items-center bg-background/90"
+                >
+                  <X className="h-4 w-4" />
+                </button>
                 <div className="mt-1 grid grid-cols-3 gap-1">
-                  <button type="button" aria-label="Mover para a esquerda" disabled={i === 0} onClick={() => moveImg(i, -1)} className="grid h-8 place-items-center border border-border disabled:opacity-30"><ArrowLeft className="h-3.5 w-3.5" /></button>
-                  <button type="button" aria-label="Definir como principal" disabled={i === 0} onClick={() => makeMain(i)} className="grid h-8 place-items-center border border-border disabled:opacity-30"><Star className="h-3.5 w-3.5" /></button>
-                  <button type="button" aria-label="Mover para a direita" disabled={i === images.length - 1} onClick={() => moveImg(i, 1)} className="grid h-8 place-items-center border border-border disabled:opacity-30"><ArrowRight className="h-3.5 w-3.5" /></button>
+                  <button
+                    type="button"
+                    aria-label="Mover para a esquerda"
+                    disabled={i === 0}
+                    onClick={() => moveImg(i, -1)}
+                    className="grid h-8 place-items-center border border-border disabled:opacity-30"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Definir como principal"
+                    disabled={i === 0}
+                    onClick={() => makeMain(i)}
+                    className="grid h-8 place-items-center border border-border disabled:opacity-30"
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Mover para a direita"
+                    disabled={i === images.length - 1}
+                    onClick={() => moveImg(i, 1)}
+                    className="grid h-8 place-items-center border border-border disabled:opacity-30"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </li>
             ))}
@@ -169,49 +307,143 @@ export function ProductForm({ product, initialImages = [] }: Props) {
       <section className="space-y-5 border border-border bg-background p-4">
         <label className={label}>
           Nome do produto
-          <input value={v.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex.: Bouquet Gerberas Rosa" className={input} />
+          <input
+            value={v.name}
+            onChange={(e) => set("name", e.target.value)}
+            placeholder="Ex.: Bouquet Gerberas Rosa"
+            className={input}
+          />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className={label}>
             Preço (€)
-            <input value={v.price} onChange={(e) => set("price", e.target.value)} inputMode="decimal" placeholder="25" className={input} />
+            <input
+              value={v.price}
+              onChange={(e) => set("price", e.target.value)}
+              inputMode="decimal"
+              placeholder="25"
+              className={input}
+            />
           </label>
           <label className={label}>
             Preço anterior <span className="font-normal text-muted-foreground">(promoção)</span>
-            <input value={v.old_price} onChange={(e) => set("old_price", e.target.value)} inputMode="decimal" placeholder="Opcional" className={input} />
+            <input
+              value={v.old_price}
+              onChange={(e) => set("old_price", e.target.value)}
+              inputMode="decimal"
+              placeholder="Opcional"
+              className={input}
+            />
           </label>
         </div>
+        <fieldset disabled={saving || categoriesPending || categoriesError} className="space-y-2">
+          <legend className={label}>Categorias</legend>
+          {categoriesPending && (
+            <p role="status" className="text-sm text-muted-foreground">
+              A carregar categorias…
+            </p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {categories?.map((c) => (
+              <label
+                key={c.id}
+                className="flex min-h-12 items-center gap-3 border border-border px-3 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={v.category_ids.includes(c.id)}
+                  onChange={(e) =>
+                    set(
+                      "category_ids",
+                      e.target.checked
+                        ? [...v.category_ids, c.id]
+                        : v.category_ids.filter((id) => id !== c.id),
+                    )
+                  }
+                  className="h-5 w-5 shrink-0 accent-primary"
+                />
+                <span>
+                  {c.name}
+                  {!c.active && <span className="text-muted-foreground"> (oculta)</span>}
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Podes escolher várias categorias. Sem seleção, o produto fica sem categoria.
+          </p>
+        </fieldset>
+        {categoriesError && (
+          <div role="alert" className="space-y-2 text-sm text-destructive">
+            <p>Não foi possível carregar as categorias.</p>
+            <button
+              type="button"
+              onClick={() => reloadCategories()}
+              className="min-h-11 border border-border px-3"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
         <label className={label}>
-          Categoria
-          <select value={v.category_id} onChange={(e) => set("category_id", e.target.value)} className={input}>
-            <option value="">Sem categoria</option>
-            {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
-        <label className={label}>
-          Descrição curta <span className="font-normal text-muted-foreground">(aparece no cartão)</span>
-          <input value={v.short_description} onChange={(e) => set("short_description", e.target.value)} className={input} />
+          Descrição curta{" "}
+          <span className="font-normal text-muted-foreground">(aparece no cartão)</span>
+          <input
+            value={v.short_description}
+            onChange={(e) => set("short_description", e.target.value)}
+            className={input}
+          />
         </label>
         <label className={label}>
           Descrição completa
-          <textarea value={v.description} onChange={(e) => set("description", e.target.value)} rows={4} className={`${input} h-auto py-3`} />
+          <textarea
+            value={v.description}
+            onChange={(e) => set("description", e.target.value)}
+            rows={4}
+            className={`${input} h-auto py-3`}
+          />
         </label>
       </section>
 
       <section className="divide-y divide-border border border-border bg-background">
-        <YesNo label="Produto disponível?" value={v.available} onChange={(b) => set("available", b)} />
+        <YesNo
+          label="Produto disponível?"
+          value={v.available}
+          onChange={(b) => set("available", b)}
+        />
         <YesNo label="Mostrar no site?" value={v.active} onChange={(b) => set("active", b)} />
-        <YesNo label="Produto em destaque?" value={v.featured} onChange={(b) => set("featured", b)} />
-        <YesNo label="Permite personalização?" value={v.customizable} onChange={(b) => set("customizable", b)} />
+        <YesNo
+          label="Produto em destaque?"
+          value={v.featured}
+          onChange={(b) => set("featured", b)}
+        />
+        <YesNo
+          label="Permite personalização?"
+          value={v.customizable}
+          onChange={(b) => set("customizable", b)}
+        />
       </section>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background p-3 md:static md:border-0 md:bg-transparent md:p-0">
         <div className="mx-auto grid max-w-5xl grid-cols-[auto_1fr_1fr] gap-2">
-          <Link to="/admin/produtos" className="flex h-12 items-center justify-center border border-border px-4 text-sm">Cancelar</Link>
-          <button disabled={saving} onClick={() => save(false)} className="h-12 border border-primary text-sm font-medium disabled:opacity-60">
+          <Link
+            to="/admin/produtos"
+            className="flex h-12 items-center justify-center border border-border px-4 text-sm"
+          >
+            Cancelar
+          </Link>
+          <button
+            disabled={saving || categoriesPending || categoriesError}
+            onClick={() => save(false)}
+            className="h-12 border border-primary text-sm font-medium disabled:opacity-60"
+          >
             Guardar produto
           </button>
-          <button disabled={saving} onClick={() => save(true)} className="inline-flex h-12 items-center justify-center gap-2 bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60">
+          <button
+            disabled={saving || categoriesPending || categoriesError}
+            onClick={() => save(true)}
+            className="inline-flex h-12 items-center justify-center gap-2 bg-primary text-sm font-medium text-primary-foreground disabled:opacity-60"
+          >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />} Guardar e publicar
           </button>
         </div>
@@ -220,13 +452,26 @@ export function ProductForm({ product, initialImages = [] }: Props) {
   );
 }
 
-function YesNo({ label, value, onChange }: { label: string; value: boolean; onChange: (b: boolean) => void }) {
+function YesNo({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (b: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3 p-4">
       <span className="text-sm font-medium">{label}</span>
       <div className="grid grid-cols-2 border border-border">
         {[true, false].map((b) => (
-          <button key={String(b)} type="button" onClick={() => onChange(b)} className={`h-10 w-16 text-sm ${value === b ? "bg-primary text-primary-foreground" : ""}`}>
+          <button
+            key={String(b)}
+            type="button"
+            onClick={() => onChange(b)}
+            className={`h-10 w-16 text-sm ${value === b ? "bg-primary text-primary-foreground" : ""}`}
+          >
             {b ? "Sim" : "Não"}
           </button>
         ))}
@@ -236,7 +481,11 @@ function YesNo({ label, value, onChange }: { label: string; value: boolean; onCh
 }
 
 export async function loadProductImages(productId: string, mainImage: string | null) {
-  const { data } = await supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order");
+  const { data } = await supabase
+    .from("product_images")
+    .select("*")
+    .eq("product_id", productId)
+    .order("sort_order");
   let paths = (data ?? []).map((d) => d.image_url);
   if (!paths.length && mainImage) paths = [mainImage];
   const resolve = await resolveImageUrls(paths);

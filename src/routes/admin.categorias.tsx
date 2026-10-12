@@ -7,8 +7,14 @@ import { supabase } from "@/integrations/external/client";
 import { friendlyError, uniqueSlug, type Category } from "@/lib/admin";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/admin/categorias")({
@@ -23,22 +29,35 @@ function CategoriesPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "categories-with-counts"],
     queryFn: async () => {
-      const [c, p] = await Promise.all([
-        supabase.from("categories").select("*").order("sort_order").order("created_at"),
-        supabase.from("products").select("category_id"),
-      ]);
+      const c = await supabase
+        .from("categories")
+        .select("*,product_categories(product_id)")
+        .order("sort_order")
+        .order("created_at");
       if (c.error) throw c.error;
-      return (c.data ?? []).map((cat) => ({ ...cat, count: (p.data ?? []).filter((x) => x.category_id === cat.id).length }));
+      return (c.data ?? []).map(({ product_categories, ...cat }) => ({
+        ...cat,
+        count: new Set(product_categories.map((relation) => relation.product_id)).size,
+      }));
     },
   });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["admin"] });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["admin"] });
+    qc.invalidateQueries({ queryKey: ["public-products"] });
+    qc.invalidateQueries({ queryKey: ["public-categories"] });
+  };
 
   const add = async () => {
     if (!newName.trim()) return;
     const slug = await uniqueSlug("categories", newName);
     const max = Math.max(0, ...(data ?? []).map((c) => c.sort_order));
-    const { error } = await supabase.from("categories").insert({ name: newName.trim(), slug, sort_order: max + 1 });
-    if (error) { toast.error(friendlyError()); return; }
+    const { error } = await supabase
+      .from("categories")
+      .insert({ name: newName.trim(), slug, sort_order: max + 1 });
+    if (error) {
+      toast.error(friendlyError());
+      return;
+    }
     setNewName("");
     toast.success("Categoria criada.");
     refresh();
@@ -46,7 +65,10 @@ function CategoriesPage() {
 
   const update = async (c: Category, patch: Partial<Category>, msg: string) => {
     const { error } = await supabase.from("categories").update(patch).eq("id", c.id);
-    if (error) { toast.error(friendlyError()); return; }
+    if (error) {
+      toast.error(friendlyError());
+      return;
+    }
     toast.success(msg);
     refresh();
   };
@@ -65,7 +87,10 @@ function CategoriesPage() {
     await Promise.all(
       list.map((c, k) => {
         const pos = k === i ? i + d : k === i + d ? i : k;
-        return supabase.from("categories").update({ sort_order: pos + 1 }).eq("id", c.id);
+        return supabase
+          .from("categories")
+          .update({ sort_order: pos + 1 })
+          .eq("id", c.id);
       }),
     );
     refresh();
@@ -75,7 +100,10 @@ function CategoriesPage() {
     if (!toDelete) return;
     const { error } = await supabase.from("categories").delete().eq("id", toDelete.id);
     setToDelete(null);
-    if (error) { toast.error(friendlyError()); return; }
+    if (error) {
+      toast.error(friendlyError());
+      return;
+    }
     toast.success("Categoria eliminada.");
     refresh();
   };
@@ -84,27 +112,83 @@ function CategoriesPage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-medium">Categorias</h1>
       <div className="flex gap-2">
-        <input value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} placeholder="Nova categoria" className="h-12 flex-1 border border-border bg-background px-4 text-base outline-none focus:border-primary" />
-        <button onClick={add} className="inline-flex h-12 items-center gap-2 bg-primary px-4 text-sm font-medium text-primary-foreground"><Plus className="h-4 w-4" />Criar</button>
+        <input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add()}
+          placeholder="Nova categoria"
+          className="h-12 flex-1 border border-border bg-background px-4 text-base outline-none focus:border-primary"
+        />
+        <button
+          onClick={add}
+          className="inline-flex h-12 items-center gap-2 bg-primary px-4 text-sm font-medium text-primary-foreground"
+        >
+          <Plus className="h-4 w-4" />
+          Criar
+        </button>
       </div>
-      {isLoading && <div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>}
-      {isError && <p className="text-sm text-destructive">Não foi possível carregar as categorias.</p>}
-      {data?.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Ainda não tens categorias.</p>}
+      {isLoading && (
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      )}
+      {isError && (
+        <p className="text-sm text-destructive">Não foi possível carregar as categorias.</p>
+      )}
+      {data?.length === 0 && (
+        <p className="py-8 text-center text-sm text-muted-foreground">Ainda não tens categorias.</p>
+      )}
       <ul className="space-y-2">
         {data?.map((c, i) => (
-          <li key={c.id} className={`border border-border bg-background p-3 ${c.active ? "" : "opacity-70"}`}>
+          <li
+            key={c.id}
+            className={`border border-border bg-background p-3 ${c.active ? "" : "opacity-70"}`}
+          >
             <div className="flex items-center gap-2">
               <CategoryName c={c} onSave={(n) => rename(c, n)} />
-              <button aria-label="Subir" disabled={i === 0} onClick={() => move(i, -1)} className="grid h-10 w-10 place-items-center border border-border disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
-              <button aria-label="Descer" disabled={i === data.length - 1} onClick={() => move(i, 1)} className="grid h-10 w-10 place-items-center border border-border disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+              <button
+                aria-label="Subir"
+                disabled={i === 0}
+                onClick={() => move(i, -1)}
+                className="grid h-10 w-10 place-items-center border border-border disabled:opacity-30"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </button>
+              <button
+                aria-label="Descer"
+                disabled={i === data.length - 1}
+                onClick={() => move(i, 1)}
+                className="grid h-10 w-10 place-items-center border border-border disabled:opacity-30"
+              >
+                <ArrowDown className="h-4 w-4" />
+              </button>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2 text-sm">
-              <span className="text-muted-foreground">{c.count} {c.count === 1 ? "produto" : "produtos"}</span>
+              <span className="text-muted-foreground">
+                {c.count} {c.count === 1 ? "produto" : "produtos"}
+              </span>
               <div className="flex gap-2">
-                <button onClick={() => update(c, { active: !c.active }, c.active ? "Categoria desativada." : "Categoria ativada.")} className="h-10 border border-border px-3">
+                <button
+                  onClick={() =>
+                    update(
+                      c,
+                      { active: !c.active },
+                      c.active ? "Categoria desativada." : "Categoria ativada.",
+                    )
+                  }
+                  className="h-10 border border-border px-3"
+                >
                   {c.active ? "Desativar" : "Ativar"}
                 </button>
-                <button aria-label="Eliminar" onClick={() => setToDelete(c)} className="grid h-10 w-10 place-items-center border border-border text-destructive"><Trash2 className="h-4 w-4" /></button>
+                <button
+                  aria-label="Eliminar"
+                  onClick={() => setToDelete(c)}
+                  className="grid h-10 w-10 place-items-center border border-border text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </li>
@@ -117,13 +201,18 @@ function CategoriesPage() {
             <AlertDialogTitle>Eliminar «{toDelete?.name}»?</AlertDialogTitle>
             <AlertDialogDescription>
               {toDelete && toDelete.count > 0
-                ? `Atenção: esta categoria ainda tem ${toDelete.count} ${toDelete.count === 1 ? "produto" : "produtos"}. Os produtos não são apagados, mas ficam sem categoria.`
+                ? `Atenção: esta categoria ainda tem ${toDelete.count} ${toDelete.count === 1 ? "produto" : "produtos"}. Os produtos não são apagados. Apenas esta associação é removida; as restantes categorias são mantidas.`
                 : "Esta ação não pode ser desfeita."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">Eliminar</AlertDialogAction>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Eliminar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -136,8 +225,21 @@ function CategoryName({ c, onSave }: { c: Category; onSave: (n: string) => void 
   const dirty = name.trim() !== c.name;
   return (
     <div className="flex flex-1 gap-2">
-      <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSave(name)} className="h-10 min-w-0 flex-1 border border-border bg-background px-3 text-base outline-none focus:border-primary" />
-      {dirty && <button aria-label="Guardar" onClick={() => onSave(name)} className="grid h-10 w-10 place-items-center bg-primary text-primary-foreground"><Check className="h-4 w-4" /></button>}
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onSave(name)}
+        className="h-10 min-w-0 flex-1 border border-border bg-background px-3 text-base outline-none focus:border-primary"
+      />
+      {dirty && (
+        <button
+          aria-label="Guardar"
+          onClick={() => onSave(name)}
+          className="grid h-10 w-10 place-items-center bg-primary text-primary-foreground"
+        >
+          <Check className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
