@@ -187,7 +187,7 @@ function Index() {
               Ver catálogo
             </Link>
             <a href="#personalizados" className={btnOutline}>
-              Criar bouquet personalizado
+              Personalizar
             </a>
           </div>
           <p className="mt-8 text-[10px] uppercase tracking-[0.2em] text-muted-foreground md:mt-10">
@@ -363,24 +363,26 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
   return (
     <section id="personalizados" className="scroll-mt-20 border-t border-border">
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-16 px-6 py-24 md:px-16 md:py-32 lg:grid-cols-2 lg:gap-24">
-        <div>
-          <p className={eyebrow}>Personalizados</p>
-          <h2
-            data-reveal="heading"
-            data-reveal-direction="right"
-            className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl"
-          >
-            Um bouquet feito só para essa pessoa.
-          </h2>
-          <p
-            data-reveal
-            data-reveal-direction="right"
-            data-reveal-delay={motion.stagger.item}
-            className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground"
-          >
-            Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
-          </p>
-          <ImageReveal className="image-hover-frame mt-16 hidden aspect-video overflow-hidden bg-muted md:block">
+        <div className="flex min-w-0 flex-col gap-12 lg:justify-between">
+          <div>
+            <p className={eyebrow}>Personalizados</p>
+            <h2
+              data-reveal="heading"
+              data-reveal-direction="right"
+              className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl"
+            >
+              Um bouquet feito só para essa pessoa.
+            </h2>
+            <p
+              data-reveal
+              data-reveal-direction="right"
+              data-reveal-delay={motion.stagger.item}
+              className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground"
+            >
+              Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
+            </p>
+          </div>
+          <ImageReveal className="image-hover-frame hidden aspect-square w-full shrink-0 overflow-hidden bg-muted md:block">
             <FallbackImage
               src={imageUrl}
               fallbackSrc={hands}
