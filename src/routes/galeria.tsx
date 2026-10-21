@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { publicGalleryQuery } from "@/lib/gallery.functions";
 import { GalleryGrid } from "@/components/site/GalleryGrid";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
-import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
+import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
 
 export const Route = createFileRoute("/galeria")({
   loader: ({ context }) => context.queryClient.fetchQuery(publicGalleryQuery),
@@ -61,7 +61,7 @@ function GalleryPage() {
         )}
       </main>
       <SiteFooter />
-      <MobileCtaBar />
+      <FloatingWhatsApp />
     </StorefrontMotion>
   );
 }

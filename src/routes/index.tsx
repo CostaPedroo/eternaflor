@@ -19,7 +19,7 @@ import { HeroImage } from "@/components/site/HeroImage";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { ImageReveal } from "@/components/site/ImageReveal";
 import { motion } from "@/lib/storefront-motion";
-import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
+import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
 import hands from "@/assets/hands.jpg";
 
 const TITLE = "Eterna Flor | Bouquets e Flores Artesanais que Não Murcham";
@@ -329,7 +329,7 @@ function Index() {
       </section>
 
       <SiteFooter />
-      <MobileCtaBar />
+      <FloatingWhatsApp />
     </StorefrontMotion>
   );
 }

@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { AnimatedGrid, type AnimatedGridHandle } from "@/components/site/AnimatedGrid";
 import { motion } from "@/lib/storefront-motion";
-import { SiteHeader, SiteFooter, MobileCtaBar } from "@/components/site/SiteChrome";
+import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
 import { belongsToCategory } from "@/lib/product-categories";
 
 const TITLE = "Catálogo | Eterna Flor";
@@ -178,7 +178,7 @@ function Catalogo() {
         )}
       </main>
       <SiteFooter />
-      <MobileCtaBar onCatalog />
+      <FloatingWhatsApp />
     </StorefrontMotion>
   );
 }
