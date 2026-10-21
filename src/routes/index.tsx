@@ -6,7 +6,7 @@ import { publicSiteSettingsQuery } from "@/lib/site-settings";
 import { galleryPreviewQuery } from "@/lib/gallery.functions";
 import { GalleryPreview } from "@/components/site/GalleryPreview";
 import { useState, type FormEvent } from "react";
-import { MessageCircle, Instagram } from "lucide-react";
+import { MessageCircle, Instagram, Flower2, Palette, HeartHandshake, SprayCan } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -91,9 +91,10 @@ export const Route = createFileRoute("/")({
 });
 
 const values = [
-  ["Feitas à mão", "Cada flor é criada individualmente."],
-  ["Não murcham", "Uma recordação feita para durar."],
-  ["Personalizáveis", "Escolhe cores, flores e estilo."],
+  { title: "Não murcham", description: "Duram para sempre.", icon: Flower2 },
+  { title: "A teu gosto", description: "Personaliza cores e detalhes.", icon: Palette },
+  { title: "Feitas à mão", description: "Criado com carinho.", icon: HeartHandshake },
+  { title: "Com o teu perfume", description: "Finaliza com o teu aroma.", icon: SprayCan },
 ];
 
 const faqs = [
@@ -196,19 +197,44 @@ function Index() {
       </section>
 
       {/* Value proposition */}
-      <section className="border-t border-border">
-        <div className="mx-auto grid max-w-[1440px] gap-10 px-6 py-16 md:grid-cols-3 md:gap-16 md:px-16 md:py-24">
-          {values.map(([t, d], i) => (
-            <div
-              key={t}
-              data-reveal
-              data-reveal-direction={i === 0 ? "left" : i === 2 ? "right" : "bottom"}
-              data-reveal-delay={i * motion.stagger.item}
-            >
-              <h2 className="font-serif text-3xl font-light italic">{t}</h2>
-              <p className="mt-3 font-light text-muted-foreground">{d}</p>
-            </div>
-          ))}
+      <section aria-label="Vantagens Eterna Flor" className="border-t border-border">
+        <div className="mx-auto max-w-[1440px] px-5 py-2 md:px-12 md:py-5 lg:py-7">
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {values.map(({ title, description, icon: Icon }, i) => (
+              <li
+                key={title}
+                className="flex min-w-0 items-center border-b border-border py-5 last:border-b-0 md:border-b-0 md:px-5 md:odd:border-r lg:border-r lg:px-4 lg:py-3 lg:last:border-r-0"
+              >
+                <div
+                  data-reveal
+                  data-reveal-direction={
+                    i === 0 ? "left" : i === values.length - 1 ? "right" : "bottom"
+                  }
+                  data-reveal-delay={i * motion.stagger.item}
+                  className="flex min-w-0 items-center gap-4 min-[360px]:gap-5 md:gap-4 lg:gap-3 xl:gap-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`grid h-16 w-16 shrink-0 place-items-center rounded-full text-primary min-[360px]:h-[72px] min-[360px]:w-[72px] lg:h-12 lg:w-12 xl:h-14 xl:w-14 ${i % 2 === 0 ? "bg-blush/50" : "bg-sage-soft"}`}
+                  >
+                    <Icon
+                      strokeWidth={1.25}
+                      className="h-9 w-9 lg:h-7 lg:w-7 xl:h-8 xl:w-8"
+                      focusable="false"
+                    />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="font-serif text-[26px] font-medium leading-tight lg:text-[22px] xl:text-2xl">
+                      {title}
+                    </h2>
+                    <p className="mt-1 text-base font-light leading-relaxed text-muted-foreground lg:text-sm xl:text-base">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
