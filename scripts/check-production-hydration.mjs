@@ -53,6 +53,7 @@ for (const key of [
   "sessionStorage",
   "HTMLElement",
   "HTMLImageElement",
+  "Image",
   "Element",
   "Node",
   "MutationObserver",

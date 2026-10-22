@@ -25,7 +25,8 @@ import { Route } from "@/routes/__root";
 const Shell = (
   Route.options as typeof Route.options & { shellComponent: ComponentType<{ children: ReactNode }> }
 ).shellComponent;
-const remote = "https://photos.test/site/hero/managed.webp";
+const remote =
+  "https://shop.supabase.co/storage/v1/object/public/product-images/site/hero/managed.webp";
 // The deployed response inserts this newline + comment immediately after charset.
 const netlifyAnnotation =
   "\n<!-- This site is hosted on Netlify. Anyone can build and deploy a site\n     like this one for free: https://netlify.new/\n     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->";
@@ -47,6 +48,7 @@ afterEach(() => {
   document.head.replaceChildren();
   document.body.replaceChildren();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe("Full document hydration after Netlify HTML annotation", () => {
@@ -80,6 +82,7 @@ describe("Full document hydration after Netlify HTML annotation", () => {
   it.each([false, true])(
     "preserves the SSR hero and its single timeline through hydration/decode (Netlify annotation: %s)",
     async (annotated) => {
+      vi.stubEnv("VITE_EXT_SUPABASE_URL", "https://shop.supabase.co");
       const html = renderToString(page());
       const delivered = annotated
         ? html.replace(/(<meta charSet="utf-8"\/>)/, "$1" + netlifyAnnotation)
@@ -95,6 +98,10 @@ describe("Full document hydration after Netlify HTML annotation", () => {
       expect(image).toHaveAttribute("src", remote);
       expect(image).toHaveAttribute("loading", "eager");
       expect(image).toHaveAttribute("fetchPriority", "high");
+      expect(image.closest("picture")?.querySelector("source")).toHaveAttribute(
+        "media",
+        "(max-width: 767px)",
+      );
       expect(frame).not.toHaveAttribute("data-reveal");
       const mutations: MutationRecord[] = [];
       const watch = new MutationObserver((records) => mutations.push(...records));

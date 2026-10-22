@@ -29,9 +29,11 @@ function viewport(mobile: boolean) {
 const trigger = () => screen.getByRole("button", { name: "Data em que precisa" });
 const hiddenValue = () => (document.querySelector('input[name="data"]') as HTMLInputElement).value;
 async function open() {
-  trigger().focus();
+  act(() => trigger().focus());
   fireEvent.click(trigger());
-  return within(await screen.findByRole("dialog", { name: "Escolher data" }));
+  const calendar = within(await screen.findByRole("dialog", { name: "Escolher data" }));
+  await calendar.findByRole("grid", {}, { timeout: 5000 });
+  return calendar;
 }
 
 describe("Personalized order date picker", () => {
@@ -149,10 +151,12 @@ describe("Personalized order date picker", () => {
     render(<OrderDatePicker />);
     fireEvent.click(trigger());
     const panel = within(screen.getByRole("dialog"));
+    await vi.waitFor(() => expect(panel.getByRole("grid")).toBeInTheDocument());
     fireEvent.click(panel.getByRole("button", { name: /24 de outubro de 2026/i }));
     fireEvent.click(panel.getByRole("button", { name: "Confirmar data" }));
     expect(hiddenValue()).toBe("2026-10-24");
-    act(() => vi.advanceTimersByTime(1000));
+    const midnight = new Date(2026, 9, 25);
+    act(() => vi.advanceTimersByTime(midnight.getTime() - Date.now()));
     expect(hiddenValue()).toBe("");
     fireEvent.click(trigger());
     const nextDay = within(screen.getByRole("dialog"));

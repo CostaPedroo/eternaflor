@@ -3,6 +3,7 @@ import type { PublicProduct } from "@/lib/catalog.functions";
 import { useState } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ProductDetail } from "@/components/site/ProductDetail";
+import { ResponsiveProductImage } from "@/components/site/ResponsiveProductImage";
 
 export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDelay?: number }) {
   const [open, setOpen] = useState(false);
@@ -34,14 +35,9 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
                 </span>
               </div>
               {p.image && (
-                <img
+                <ResponsiveProductImage
                   src={p.image}
                   alt={`${p.name} — flores feitas à mão`}
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
                   className={`editorial-image relative h-full w-full object-cover ${p.available ? "" : "opacity-60"}`}
                 />
               )}

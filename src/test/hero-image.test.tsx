@@ -3,6 +3,7 @@ import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HeroImage } from "@/components/site/HeroImage";
+import { heroImagePreloads, mobileHeroImageSources } from "@/lib/responsive-images";
 
 const configured = "https://photos.test/hero.webp";
 const fallback = "/homepage-hero.webp";
@@ -10,6 +11,7 @@ const alt = "Bouquet feito à mão";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 function photo(src: string | null = configured) {
   return <HeroImage src={src} fallbackSrc={fallback} alt={alt} />;
@@ -21,6 +23,52 @@ function loaded(image: HTMLElement, decode: () => Promise<void> = () => Promise.
 }
 
 describe("LCP hero photo", () => {
+  it("matches the mobile preload to its picture source while retaining the original desktop URL and priority", () => {
+    vi.stubEnv("VITE_EXT_SUPABASE_URL", "https://shop.supabase.co");
+    const src =
+      "https://shop.supabase.co/storage/v1/object/public/product-images/site/hero/photo.webp";
+    const html = renderToString(photo(src));
+    expect(html).toContain("<picture>");
+    expect(html).toContain(`src="${src}"`);
+    expect(html).toContain('loading="eager"');
+    expect(html).toContain('fetchPriority="high"');
+    expect(html).not.toContain('rel="preload"');
+    const links = heroImagePreloads(src);
+    expect(links[0]).toMatchObject({
+      imageSrcSet: mobileHeroImageSources(src),
+      imageSizes: "calc(100vw - 3rem)",
+      media: "(max-width: 767px)",
+      fetchPriority: "high",
+    });
+    expect(links[1]).toMatchObject({ href: src, media: "(min-width: 768px)" });
+    expect(heroImagePreloads(fallback)).toEqual([]);
+  });
+
+  it("retries the original after a mobile variant fails without remounting or replaying the hero", async () => {
+    vi.stubEnv("VITE_EXT_SUPABASE_URL", "https://shop.supabase.co");
+    const src =
+      "https://shop.supabase.co/storage/v1/object/public/product-images/site/hero/photo.webp";
+    const { container } = render(photo(src));
+    const image = screen.getByAltText(alt) as HTMLImageElement;
+    Object.defineProperty(image, "currentSrc", {
+      configurable: true,
+      value:
+        src.replace("/object/public/", "/render/image/public/") +
+        "?width=1080&quality=75&resize=contain",
+    });
+    fireEvent.error(image);
+    expect(container.querySelector("source")).toBeNull();
+    expect(screen.getByAltText(alt)).toBe(image);
+    expect(image).toHaveAttribute("src", src);
+    await act(async () => loaded(image));
+    expect(image.style.visibility).toBe("");
+    expect(image).toHaveAttribute("data-image-state", "ready");
+    expect(image).not.toHaveAttribute("data-reveal");
+    Object.defineProperty(image, "currentSrc", { configurable: true, value: src });
+    fireEvent.error(image);
+    expect(screen.getByAltText(alt)).toHaveAttribute("src", fallback);
+  });
+
   it("renders the configured URL directly in SSR with high priority and no client preload dependency", () => {
     const html = renderToString(photo());
     expect(html).toContain(`src="${configured}"`);

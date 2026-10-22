@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { mobileHeroImageSources, MOBILE_HERO_SIZES } from "@/lib/responsive-images";
 
 type Props = { src: string | null | undefined; fallbackSrc: string; alt: string };
 
@@ -15,6 +16,8 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
   });
   const failed = failures.source === src ? failures.urls : [];
   const decoding = useRef(new WeakSet<HTMLImageElement>());
+  const retried = useRef<string | null>(null);
+  const [originalOnly, setOriginalOnly] = useState<string | null>(null);
   const [phase, setPhase] = useState<{ url: string; state: "loading" | "ready" | "cached" } | null>(
     null,
   );
@@ -25,6 +28,16 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
       if (ref.current !== image) return;
       // Hide the failing node immediately, before React replaces it with the default image.
       image.style.visibility = "hidden";
+      if (
+        mobileHeroImageSources(failedUrl) &&
+        retried.current !== failedUrl &&
+        image.currentSrc !== image.src
+      ) {
+        retried.current = failedUrl;
+        decoding.current.delete(image);
+        setOriginalOnly(failedUrl);
+        return;
+      }
       setFailures((previous) => ({
         source: src,
         urls: previous.source === src ? [...new Set([...previous.urls, failedUrl])] : [failedUrl],
@@ -46,6 +59,7 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
         fail(image, loadedUrl);
         return;
       }
+      image.style.visibility = "";
       setPhase({ url: loadedUrl, state: cached ? "cached" : "ready" });
     },
     [fail],
@@ -63,7 +77,7 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
     // The keyed image ref prevents an old decode from revealing a new source.
   }, [url, decodePhoto]);
 
-  return (
+  const photo = (
     <img
       key={url ?? "failed"}
       ref={ref}
@@ -83,5 +97,16 @@ function HeroPhoto({ src, fallbackSrc, alt }: { src: string; fallbackSrc: string
         if (url) fail(event.currentTarget, url);
       }}
     />
+  );
+  const sources = url ? mobileHeroImageSources(url) : null;
+  return sources ? (
+    <picture>
+      {originalOnly !== url && (
+        <source media="(max-width: 767px)" srcSet={sources} sizes={MOBILE_HERO_SIZES} />
+      )}
+      {photo}
+    </picture>
+  ) : (
+    photo
   );
 }

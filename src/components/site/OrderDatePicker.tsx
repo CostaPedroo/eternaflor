@@ -1,10 +1,8 @@
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ComponentType } from "react";
 import { format, parseISO, startOfDay } from "date-fns";
-import { DayButton } from "react-day-picker";
-import { pt } from "react-day-picker/locale";
 import { CalendarDays, X } from "lucide-react";
 import { Content as DialogContent } from "@radix-ui/react-dialog";
-import { Calendar } from "@/components/ui/calendar";
+import type { OrderDateCalendarProps } from "@/components/site/OrderDateCalendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
@@ -19,9 +17,6 @@ import { motionStyle } from "@/lib/storefront-motion";
 
 // Calendar dates are local civil dates. Never serialize them through UTC/toISOString.
 const dateValue = (date: Date) => format(date, "yyyy-MM-dd");
-const weekdays = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const navigationButton =
-  "grid h-11 w-11 place-items-center rounded-full text-primary hover:bg-muted disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary";
 
 /** The optional hidden field preserves the native date field's FormData contract. */
 export function OrderDatePicker() {
@@ -32,6 +27,37 @@ export function OrderDatePicker() {
   const [month, setMonth] = useState<Date>();
   const [open, setOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const field = useRef<HTMLDivElement>(null);
+  const pending = useRef<Promise<void> | null>(null);
+  const [CalendarView, setCalendarView] = useState<ComponentType<OrderDateCalendarProps> | null>(
+    null,
+  );
+  const [loadFailed, setLoadFailed] = useState(false);
+  const preload = useCallback(() => {
+    if (pending.current) return;
+    setLoadFailed(false);
+    pending.current = import("./OrderDateCalendar")
+      .then((module) => setCalendarView(() => module.default))
+      .catch(() => {
+        pending.current = null;
+        setLoadFailed(true);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!field.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          preload();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(field.current);
+    return () => observer.disconnect();
+  }, [preload]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -63,6 +89,7 @@ export function OrderDatePicker() {
 
   const changeOpen = (next: boolean) => {
     if (next) {
+      preload();
       const current = startOfDay(new Date());
       const selected = value && value >= dateValue(current) ? parseISO(value) : undefined;
       setToday(current);
@@ -84,55 +111,31 @@ export function OrderDatePicker() {
 
   const Root = mobile ? Dialog : Popover;
   const Trigger = mobile ? DialogTrigger : PopoverTrigger;
-  const calendar = (
-    <Calendar
-      mode="single"
-      locale={pt}
-      weekStartsOn={0}
+  const calendar = CalendarView ? (
+    <CalendarView
       selected={draft}
-      {...(month ? { month } : {})}
+      month={month}
       onMonthChange={setMonth}
-      {...(today ? { today, startMonth: today, disabled: { before: today } } : {})}
+      today={today}
       onSelect={(date) => (mobile ? setDraft(date) : commit(date))}
-      autoFocus
-      fixedWeeks
-      className="w-full bg-background p-0"
-      components={{ DayButton }}
-      formatters={{
-        formatCaption: (date) => {
-          const text = format(date, "MMMM yyyy", { locale: pt });
-          return text.charAt(0).toUpperCase() + text.slice(1);
-        },
-        formatWeekdayName: (date) => weekdays[date.getDay()]!,
-      }}
-      classNames={{
-        root: "w-full",
-        months: "relative w-full",
-        month: "flex w-full flex-col gap-4",
-        nav: "absolute inset-x-0 top-0 flex items-center justify-between",
-        button_previous: navigationButton,
-        button_next: navigationButton,
-        month_caption: "flex min-h-11 items-center justify-center px-11",
-        caption_label: "font-serif text-2xl font-light",
-        table: "w-full table-fixed border-collapse",
-        weekdays: "grid grid-cols-7",
-        weekday:
-          "pb-3 pt-1 text-center text-[10px] font-normal tracking-[0.15em] text-muted-foreground",
-        week: "grid grid-cols-7",
-        day: "relative aspect-square min-w-0 p-0 text-center",
-        day_button:
-          "h-full w-full rounded-full font-serif text-xl font-light text-current hover:bg-muted disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
-        selected: "[&>button]:bg-primary [&>button]:text-white [&>button]:hover:bg-primary",
-        today: "[&>button]:ring-1 [&>button]:ring-inset [&>button]:ring-blush",
-        outside: "text-muted-foreground/50",
-        disabled: "opacity-35",
-        hidden: "invisible",
-      }}
     />
+  ) : (
+    <div
+      role="status"
+      className="flex aspect-square w-full items-center justify-center text-sm text-muted-foreground"
+    >
+      {loadFailed ? (
+        <button type="button" onClick={preload} className="min-h-11 underline underline-offset-4">
+          Tentar carregar calendário novamente
+        </button>
+      ) : (
+        "A carregar calendário…"
+      )}
+    </div>
   );
 
   return (
-    <div className="min-w-0">
+    <div ref={field} className="min-w-0">
       <span
         id={labelId}
         className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
@@ -146,6 +149,8 @@ export function OrderDatePicker() {
             type="button"
             aria-labelledby={labelId}
             aria-describedby={`${labelId}-value`}
+            onPointerEnter={preload}
+            onFocus={preload}
             className="mt-1 flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 py-2 text-left font-serif text-xl font-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
           >
             <span id={`${labelId}-value`} className={value ? "" : "text-muted-foreground/60"}>

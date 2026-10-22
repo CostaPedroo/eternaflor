@@ -20,6 +20,7 @@ import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { ImageReveal } from "@/components/site/ImageReveal";
 import { OrderDatePicker } from "@/components/site/OrderDatePicker";
 import { motion } from "@/lib/storefront-motion";
+import { heroImagePreloads } from "@/lib/responsive-images";
 import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
 import hands from "@/assets/hands.jpg";
 
@@ -53,7 +54,10 @@ export const Route = createFileRoute("/")({
       { property: "og:locale", content: "pt_PT" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://eternaflor.lovable.app/" }],
+    links: [
+      { rel: "canonical", href: "https://eternaflor.lovable.app/" },
+      ...heroImagePreloads(loaderData?.settings?.hero_image_url || "/homepage-hero.webp"),
+    ],
     scripts: [
       {
         type: "application/ld+json",

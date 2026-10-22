@@ -114,6 +114,7 @@ describe("Public pages with motion", () => {
       fireEvent.change(name, { target: { value: "Maria" } });
       fireEvent.click(screen.getByRole("button", { name: "Data em que precisa" }));
       const calendar = within(await screen.findByRole("dialog", { name: "Escolher data" }));
+      await calendar.findByRole("grid", {}, { timeout: 5000 });
       fireEvent.click(calendar.getByRole("button", { name: /25 de outubro de 2026/i }));
       fireEvent.click(screen.getByRole("button", { name: "Criar bouquet personalizado" }));
       const url = new URL(String(openWhatsApp.mock.calls[0]?.[0]));
@@ -511,7 +512,7 @@ describe("Public pages with motion", () => {
     expect(screen.getByText(/Normalmente entre 3 e 7 dias/)).toBeVisible();
     fireEvent.click(faq);
     expect(faq).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("link", { name: "Criar bouquet personalizado" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Personalizar" })).toHaveAttribute(
       "href",
       "#personalizados",
     );
