@@ -18,6 +18,7 @@ import { FallbackImage } from "@/components/site/FallbackImage";
 import { HeroImage } from "@/components/site/HeroImage";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { ImageReveal } from "@/components/site/ImageReveal";
+import { OrderDatePicker } from "@/components/site/OrderDatePicker";
 import { motion } from "@/lib/storefront-motion";
 import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
 import hands from "@/assets/hands.jpg";
@@ -362,8 +363,8 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
 
   return (
     <section id="personalizados" className="scroll-mt-20 border-t border-border">
-      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-16 px-6 py-24 md:px-16 md:py-32 lg:grid-cols-2 lg:gap-24">
-        <div className="flex min-w-0 flex-col gap-12 lg:justify-between">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-16 px-6 py-24 md:gap-8 md:px-16 md:py-32 min-[1200px]:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] min-[1200px]:gap-12">
+        <div className="flex min-w-0 flex-col gap-12 md:gap-8 min-[1200px]:justify-between min-[1200px]:gap-10">
           <div>
             <p className={eyebrow}>Personalizados</p>
             <h2
@@ -382,7 +383,7 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
               Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
             </p>
           </div>
-          <ImageReveal className="image-hover-frame hidden aspect-square w-full shrink-0 overflow-hidden bg-muted md:block">
+          <ImageReveal className="image-hover-frame hidden aspect-[3/2] min-h-0 w-full shrink-0 overflow-hidden bg-muted md:block min-[1200px]:aspect-square">
             <FallbackImage
               src={imageUrl}
               fallbackSrc={hands}
@@ -414,10 +415,7 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
               <span className={fieldLabel}>Ocasião</span>
               <input name="ocasiao" placeholder="Aniversário, Dia da Mãe…" className={field} />
             </label>
-            <label className="block">
-              <span className={fieldLabel}>Data em que precisa</span>
-              <input name="data" type="date" className={field} />
-            </label>
+            <OrderDatePicker />
           </div>
           <div>
             <span className={fieldLabel}>Orçamento</span>

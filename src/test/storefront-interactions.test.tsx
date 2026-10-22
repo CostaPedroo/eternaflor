@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
 import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
@@ -103,6 +103,146 @@ afterEach(() => {
 });
 
 describe("Public pages with motion", () => {
+  it("keeps the custom calendar date compatible with the actual WhatsApp form submission", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 22, 12));
+    try {
+      const openWhatsApp = vi.spyOn(window, "open").mockImplementation(() => null);
+      render(page(<Home />));
+      const name = screen.getByRole("textbox", { name: "Nome" });
+      expect(name).toBeRequired();
+      fireEvent.change(name, { target: { value: "Maria" } });
+      fireEvent.click(screen.getByRole("button", { name: "Data em que precisa" }));
+      const calendar = within(await screen.findByRole("dialog", { name: "Escolher data" }));
+      fireEvent.click(calendar.getByRole("button", { name: /25 de outubro de 2026/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Criar bouquet personalizado" }));
+      const url = new URL(String(openWhatsApp.mock.calls[0]?.[0]));
+      expect(url.searchParams.get("text")).toContain("Data: 2026-10-25");
+      expect(url.searchParams.get("text")).toContain("Nome: Maria");
+      expect(openWhatsApp).toHaveBeenCalledWith(expect.any(String), "_blank");
+      fireEvent.click(screen.getByRole("button", { name: "Data em que precisa" }));
+      const reopened = within(await screen.findByRole("dialog", { name: "Escolher data" }));
+      fireEvent.click(reopened.getByRole("button", { name: "Limpar" }));
+      fireEvent.click(screen.getByRole("button", { name: "Criar bouquet personalizado" }));
+      const cleared = new URL(String(openWhatsApp.mock.calls[1]?.[0]));
+      expect(cleared.searchParams.get("text")).toContain("Data: —");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("synchronizes mobile sheet categories, sorting, price shortcuts and reset with the catalogue", async () => {
+    const client = new QueryClient();
+    clients.push(client);
+    const boxes = { id: "caixas", name: "Caixas", slug: "caixas" };
+    const custom = { id: "personalizados", name: "Personalizados", slug: "personalizados" };
+    client.setQueryData(["public-categories"], [boxes, custom]);
+    client.setQueryData(
+      ["public-products"],
+      [
+        { ...product, id: "multi", categories: [boxes, custom], price: 30 },
+        { ...product, id: "small", name: "Flor Rosa", categories: [custom], price: 10 },
+        { ...product, id: "tulipa", name: "Tulipa", categories: [], price: 12 },
+      ],
+    );
+    render(
+      <QueryClientProvider client={client}>
+        <Catalog />
+      </QueryClientProvider>,
+    );
+    const ids = () =>
+      [...document.querySelectorAll<HTMLElement>("article[data-product-id]")].map(
+        (node) => node.dataset["productId"],
+      );
+    fireEvent.click(screen.getByRole("button", { name: "Caixas" }));
+    const trigger = screen.getByRole("button", { name: "Filtrar" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const panel = within(await screen.findByRole("dialog", { name: "Filtrar catálogo" }));
+    expect(panel.getByRole("combobox", { name: "Categoria" })).toHaveValue("caixas");
+    expect(panel.queryByRole("option", { name: "Até 15€" })).not.toBeInTheDocument();
+    fireEvent.change(panel.getByRole("combobox", { name: "Categoria" }), {
+      target: { value: "personalizados" },
+    });
+    fireEvent.change(panel.getByRole("combobox", { name: "Ordenar" }), {
+      target: { value: "asc" },
+    });
+    expect(ids()).toEqual(["small", "multi"]);
+    fireEvent.click(panel.getByRole("button", { name: "Aplicar filtros" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Personalizados" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("combobox", { name: "Ordenar" })).toHaveValue("asc");
+    fireEvent.click(screen.getByRole("button", { name: "Até 15€" }));
+    expect(ids()).toEqual(["small", "tulipa"]);
+    fireEvent.click(trigger);
+    const pricePanel = within(await screen.findByRole("dialog"));
+    expect(pricePanel.getByRole("checkbox", { name: "Até 15€" })).toBeChecked();
+    fireEvent.click(pricePanel.getByRole("checkbox", { name: "Até 15€" }));
+    expect(ids()).toEqual(["small", "tulipa", "multi"]);
+    fireEvent.click(pricePanel.getByRole("button", { name: "Fechar filtros" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "rosa" } });
+    fireEvent.click(trigger);
+    const resetPanel = within(await screen.findByRole("dialog"));
+    fireEvent.click(resetPanel.getByRole("button", { name: "Limpar filtros" }));
+    expect(resetPanel.getByRole("combobox", { name: "Categoria" })).toHaveValue("all");
+    expect(resetPanel.getByRole("combobox", { name: "Ordenar" })).toHaveValue("rec");
+    expect(resetPanel.getByRole("checkbox", { name: "Até 15€" })).not.toBeChecked();
+    fireEvent.click(resetPanel.getByRole("button", { name: "Aplicar filtros" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(ids()).toEqual(["multi", "small", "tulipa"]);
+    expect(new Set(ids()).size).toBe(ids().length);
+    expect(screen.getByText("3 produtos")).toBeInTheDocument();
+  });
+
+  it("locks mobile filter scrolling, restores focus, and closes by Escape, backdrop and desktop resize", async () => {
+    let desktop = false;
+    let resize: (() => void) | undefined;
+    const matchMedia = window.matchMedia;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) =>
+      query === "(min-width: 768px)"
+        ? ({
+            media: query,
+            get matches() {
+              return desktop;
+            },
+            addEventListener: (_: string, callback: () => void) => (resize = callback),
+            removeEventListener: vi.fn(),
+          } as unknown as MediaQueryList)
+        : matchMedia(query),
+    );
+    render(page(<Catalog />));
+    const trigger = screen.getByRole("button", { name: "Filtrar" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    let dialog = await screen.findByRole("dialog");
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: "Fechar filtros" })).toHaveFocus(),
+    );
+    expect(document.body).toHaveAttribute("data-scroll-locked");
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(document.body).not.toHaveAttribute("data-scroll-locked");
+    fireEvent.click(trigger);
+    dialog = await screen.findByRole("dialog");
+    const overlay = document.querySelector(".storefront-overlay")!;
+    fireEvent.pointerDown(overlay, { button: 0, pointerType: "mouse" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    fireEvent.click(trigger);
+    await screen.findByRole("dialog");
+    act(() => {
+      desktop = true;
+      resize?.();
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.body).not.toHaveAttribute("data-scroll-locked");
+  });
+
   it("keeps multi-category cards unique through category, price, search and sort combinations", () => {
     const client = new QueryClient();
     clients.push(client);
