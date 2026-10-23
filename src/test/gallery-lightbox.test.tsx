@@ -2,7 +2,17 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { GalleryGrid } from "@/components/site/GalleryGrid";
+import { GalleryGrid as Gallery } from "@/components/site/GalleryGrid";
+import type { ComponentProps } from "react";
+import { ModalTestRouter } from "./modal-router";
+
+function GalleryGrid(props: ComponentProps<typeof Gallery>) {
+  return (
+    <ModalTestRouter>
+      <Gallery {...props} />
+    </ModalTestRouter>
+  );
+}
 
 const images = [
   { id: "one", url: "/one.webp", width: 1000, height: 1400 },

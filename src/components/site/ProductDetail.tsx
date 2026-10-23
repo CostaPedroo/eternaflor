@@ -16,7 +16,7 @@ import { CrossfadeImage } from "@/components/site/CrossfadeImage";
 import { completeEntrance, motionStyle } from "@/lib/storefront-motion";
 
 /** Mounted only when the user opens a card, so catalogue cards do not fetch galleries. */
-export function ProductDetail({ p }: { p: PublicProduct }) {
+export function ProductDetail({ p, restoreFocus }: { p: PublicProduct; restoreFocus: () => void }) {
   const { data, isPending, isError, refetch } = useQuery(productImagesQuery(p.id));
   const images = data?.length ? data : [{ id: "main", url: p.image ?? "", alt: null }];
   const onSale = p.old_price != null && p.old_price > p.price;
@@ -46,6 +46,10 @@ export function ProductDetail({ p }: { p: PublicProduct }) {
       />
       <Content
         ref={content}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          restoreFocus();
+        }}
         onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) completeEntrance(event.currentTarget);
         }}

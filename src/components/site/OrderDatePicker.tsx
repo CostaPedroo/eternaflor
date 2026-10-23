@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { motionStyle } from "@/lib/storefront-motion";
+import { useModalHistory } from "@/lib/use-modal-history";
 
 // Calendar dates are local civil dates. Never serialize them through UTC/toISOString.
 const dateValue = (date: Date) => format(date, "yyyy-MM-dd");
@@ -25,8 +26,12 @@ export function OrderDatePicker() {
   const [draft, setDraft] = useState<Date>();
   const [today, setToday] = useState<Date>();
   const [month, setMonth] = useState<Date>();
-  const [open, setOpen] = useState(false);
+  const modal = useModalHistory("calendario");
+  const [desktopOpen, setDesktopOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const open = mobile ? modal.value === "data" : desktopOpen;
+  const prepared = useRef(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   const field = useRef<HTMLDivElement>(null);
   const pending = useRef<Promise<void> | null>(null);
   const [CalendarView, setCalendarView] = useState<ComponentType<OrderDateCalendarProps> | null>(
@@ -62,13 +67,15 @@ export function OrderDatePicker() {
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
     const update = () => {
-      setOpen(false);
+      setDesktopOpen(false);
+      modal.close();
       setMobile(media.matches);
     };
-    update();
+    setMobile(media.matches);
+    if (!media.matches) modal.close();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
-  }, []);
+  }, [modal.close]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -87,16 +94,32 @@ export function OrderDatePicker() {
     return () => clearTimeout(timer);
   }, []);
 
-  const changeOpen = (next: boolean) => {
-    if (next) {
-      preload();
-      const current = startOfDay(new Date());
-      const selected = value && value >= dateValue(current) ? parseISO(value) : undefined;
-      setToday(current);
-      setDraft(selected);
-      setMonth(selected ?? current);
+  const prepare = useCallback(() => {
+    preload();
+    const current = startOfDay(new Date());
+    const selected = value && value >= dateValue(current) ? parseISO(value) : undefined;
+    setToday(current);
+    setDraft(selected);
+    setMonth(selected ?? current);
+    prepared.current = true;
+  }, [preload, value]);
+
+  useEffect(() => {
+    if (open) {
+      // Forward and a direct/refreshed URL open without calling onOpenChange.
+      if (!prepared.current) prepare();
+      if (mobile) modal.ensureHistory();
+    } else {
+      prepared.current = false;
     }
-    setOpen(next);
+  }, [open, mobile, prepare, modal.ensureHistory]);
+
+  const changeOpen = (next: boolean) => {
+    if (next) prepare();
+    if (mobile) {
+      if (next) modal.change("data");
+      else modal.close();
+    } else setDesktopOpen(next);
   };
 
   const commit = (date?: Date) => {
@@ -106,7 +129,7 @@ export function OrderDatePicker() {
       return;
     }
     setValue(date ? dateValue(date) : "");
-    setOpen(false);
+    changeOpen(false);
   };
 
   const Root = mobile ? Dialog : Popover;
@@ -146,6 +169,7 @@ export function OrderDatePicker() {
       <Root open={open} onOpenChange={changeOpen}>
         <Trigger asChild>
           <button
+            ref={trigger}
             type="button"
             aria-labelledby={labelId}
             aria-describedby={`${labelId}-value`}
@@ -163,6 +187,10 @@ export function OrderDatePicker() {
           <DialogPortal>
             <DialogOverlay className="storefront-overlay bg-foreground/40" style={motionStyle} />
             <DialogContent
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                trigger.current?.focus({ preventScroll: true });
+              }}
               style={motionStyle}
               className="storefront-dialog fixed inset-x-0 bottom-0 z-50 flex max-h-[calc(100dvh-1rem)] flex-col rounded-t-[2rem] border border-border bg-background text-foreground shadow-soft outline-none"
             >

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { PublicProduct } from "@/lib/catalog.functions";
 import { productOrderMessage, wa } from "@/lib/config";
+import { ModalTestRouter } from "./modal-router";
 
 const mocks = vi.hoisted(() => ({ images: vi.fn() }));
 vi.mock("@/lib/product-images", () => ({
@@ -48,7 +49,9 @@ afterEach(() => {
 function renderCard(p = product) {
   render(
     <QueryClientProvider client={queryClient}>
-      <ProductCard p={p} />
+      <ModalTestRouter>
+        <ProductCard p={p} />
+      </ModalTestRouter>
     </QueryClientProvider>,
   );
 }
@@ -62,6 +65,14 @@ async function openCard() {
 }
 
 describe("Storefront product gallery", () => {
+  it("restores focus to the image button that opened the modal", async () => {
+    renderCard();
+    const trigger = screen.getByRole("button", { name: `Ver detalhes de ${product.name}` });
+    trigger.focus();
+    const detail = await openCard();
+    fireEvent.click(detail.getByRole("button", { name: "Fechar detalhes do produto" }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
   it("preserves the selected photo and DOM through image-list refresh/reordering", async () => {
     renderCard();
     const detail = await openCard();

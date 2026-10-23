@@ -1,12 +1,19 @@
 import { wa, formatPrice, productOrderMessage } from "@/lib/config";
 import type { PublicProduct } from "@/lib/catalog.functions";
-import { useState } from "react";
+import { useModalHistory } from "@/lib/use-modal-history";
+import { useEffect, useRef } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ProductDetail } from "@/components/site/ProductDetail";
 import { ResponsiveProductImage } from "@/components/site/ResponsiveProductImage";
 
 export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDelay?: number }) {
-  const [open, setOpen] = useState(false);
+  const modal = useModalHistory("produto");
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const imageTrigger = useRef<HTMLButtonElement>(null);
+  const open = modal.value === p.id;
+  useEffect(() => {
+    if (open) modal.ensureHistory();
+  }, [open, modal.ensureHistory]);
   const onSale = p.old_price != null && p.old_price > p.price;
   const price = (
     <span className="inline-flex items-baseline gap-2">
@@ -15,7 +22,10 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
     </span>
   );
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => (next ? modal.change(p.id) : open && modal.close())}
+    >
       <article data-product-id={p.id} className="product-card group flex h-full min-w-0 flex-col">
         <div
           data-card-reveal
@@ -26,6 +36,10 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
           <DialogTrigger asChild>
             <button
               type="button"
+              ref={imageTrigger}
+              onClick={(event) => {
+                opener.current = event.currentTarget;
+              }}
               aria-label={`Ver detalhes de ${p.name}`}
               className="image-hover-frame relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-card text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
             >
@@ -56,6 +70,9 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
               <DialogTrigger asChild>
                 <button
                   type="button"
+                  onClick={(event) => {
+                    opener.current = event.currentTarget;
+                  }}
                   className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   {p.name}
@@ -88,7 +105,15 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
           </div>
         </div>
       </article>
-      {open && <ProductDetail p={p} />}
+      {open && (
+        <ProductDetail
+          p={p}
+          restoreFocus={() => {
+            const target = opener.current?.isConnected ? opener.current : imageTrigger.current;
+            target?.focus({ preventScroll: true });
+          }}
+        />
+      )}
     </Dialog>
   );
 }

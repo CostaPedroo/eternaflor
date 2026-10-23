@@ -10,6 +10,7 @@ import { motion } from "@/lib/storefront-motion";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { ProductCard } from "@/components/site/ProductCard";
 import type { PublicProduct } from "@/lib/catalog.functions";
+import { ModalTestRouter } from "./modal-router";
 vi.mock("@/lib/product-images", () => ({
   productImagesQuery: (id: string) => ({ queryKey: ["unused", id], queryFn: () => [] }),
 }));
@@ -164,13 +165,15 @@ describe("Catalogue native FLIP", () => {
       created_at: "2026-10-08",
     });
     const page = (ids: string[]) => (
-      <StorefrontMotion>
-        <AnimatedGrid ref={ref}>
-          {ids.map((id) => (
-            <ProductCard key={id} p={product(id)} />
-          ))}
-        </AnimatedGrid>
-      </StorefrontMotion>
+      <ModalTestRouter>
+        <StorefrontMotion>
+          <AnimatedGrid ref={ref}>
+            {ids.map((id) => (
+              <ProductCard key={id} p={product(id)} />
+            ))}
+          </AnimatedGrid>
+        </StorefrontMotion>
+      </ModalTestRouter>
     );
     const view = render(page(["a", "b"]));
     const a = document.querySelector<HTMLElement>('[data-product-id="a"]')!;

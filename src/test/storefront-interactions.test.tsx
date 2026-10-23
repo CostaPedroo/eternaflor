@@ -5,6 +5,7 @@ import { hydrateRoot } from "react-dom/client";
 import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublicProduct } from "@/lib/catalog.functions";
+import { ModalTestRouter } from "./modal-router";
 
 const settingsRead = vi.hoisted(() => vi.fn());
 
@@ -57,8 +58,18 @@ vi.mock("@/lib/product-images", () => ({
 
 import { Route as HomeRoute } from "@/routes/index";
 import { Route as CatalogRoute } from "@/routes/catalogo";
-const Home = HomeRoute.options.component as ComponentType;
-const Catalog = CatalogRoute.options.component as ComponentType;
+const HomePage = HomeRoute.options.component as ComponentType;
+const CatalogPage = CatalogRoute.options.component as ComponentType;
+const Home = () => (
+  <ModalTestRouter>
+    <HomePage />
+  </ModalTestRouter>
+);
+const Catalog = () => (
+  <ModalTestRouter>
+    <CatalogPage />
+  </ModalTestRouter>
+);
 const product: PublicProduct = {
   id: "rosa",
   name: "Bouquet Rosa",

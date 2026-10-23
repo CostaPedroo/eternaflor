@@ -2,7 +2,16 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OrderDatePicker } from "@/components/site/OrderDatePicker";
+import { OrderDatePicker as DatePicker } from "@/components/site/OrderDatePicker";
+import { ModalTestRouter } from "./modal-router";
+
+function OrderDatePicker() {
+  return (
+    <ModalTestRouter>
+      <DatePicker />
+    </ModalTestRouter>
+  );
+}
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

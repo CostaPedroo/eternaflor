@@ -5,6 +5,7 @@ import type { GalleryImage } from "@/lib/gallery.functions";
 import { completeEntrance, motion, motionStyle } from "@/lib/storefront-motion";
 import { ImageReveal } from "@/components/site/ImageReveal";
 import { CrossfadeImage } from "@/components/site/CrossfadeImage";
+import { useModalHistory } from "@/lib/use-modal-history";
 
 /** Natural-ratio editorial images, with a single on-demand accessible lightbox. */
 export function GalleryGrid({
@@ -14,24 +15,29 @@ export function GalleryGrid({
   images: GalleryImage[];
   preview?: boolean;
 }) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
+  const modal = useModalHistory("imagem");
+  // Retain the last image while Radix runs its existing close transition.
+  const [lastId, setLastId] = useState<string | null>(modal.value);
+  const activeId = modal.value ?? lastId;
   const opener = useRef<HTMLButtonElement | null>(null);
   const grid = useRef<HTMLDivElement>(null);
   const index = images.findIndex((image) => image.id === activeId);
   const current = index >= 0 ? images[index] : undefined;
   useEffect(() => {
-    if (activeId !== null && !images.some((image) => image.id === activeId)) {
-      setOpen(false);
-      setActiveId(null);
-    }
-  }, [images, activeId]);
+    if (modal.value && images.some((image) => image.id === modal.value)) {
+      setLastId(modal.value);
+      modal.ensureHistory();
+    } else if (modal.value) modal.close();
+  }, [images, modal.value, modal.close, modal.ensureHistory]);
   const move = (direction: number) => {
     if (images.length > 1)
-      setActiveId(images[(index + direction + images.length) % images.length]!.id);
+      modal.change(images[(index + direction + images.length) % images.length]!.id);
   };
   return (
-    <Dialog.Root open={open && !!current} onOpenChange={setOpen}>
+    <Dialog.Root
+      open={modal.value !== null && !!current}
+      onOpenChange={(next) => !next && modal.close()}
+    >
       <div
         ref={grid}
         tabIndex={-1}
@@ -50,8 +56,7 @@ export function GalleryGrid({
               aria-label={`Ver encomenda personalizada ${position + 1}`}
               onClick={(event) => {
                 opener.current = event.currentTarget;
-                setActiveId(image.id);
-                setOpen(true);
+                modal.change(image.id);
               }}
             >
               <span
