@@ -16,7 +16,7 @@ O projeto foi desenvolvido com foco em:
 
 ## 🌐 Website
 
-**Live:** [eternaflor.lovable.app](https://eternaflor.lovable.app)
+**Live:** [eterna-flor.netlify.app](https://eterna-flor.netlify.app/)
 
 ---
 

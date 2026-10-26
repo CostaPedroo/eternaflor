@@ -114,7 +114,7 @@ export function ProductCard({
             <ProductCustomizationLink
               productId={p.id}
               {...(categoryId ? { categoryId } : {})}
-              className="inline-flex min-h-9 w-full items-center justify-center text-[9px] uppercase tracking-[0.16em] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:border sm:border-primary/50 sm:py-3.5 sm:no-underline sm:hover:bg-muted md:py-4"
+              className="inline-flex min-h-9 w-full items-center justify-center text-[9px] uppercase tracking-[0.16em] underline underline-offset-4 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:border sm:border-primary sm:py-3.5 sm:text-[10px] sm:tracking-[0.25em] sm:no-underline sm:hover:bg-muted md:py-4"
             />
           </div>
         </div>

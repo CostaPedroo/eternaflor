@@ -60,7 +60,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "canonical", href: "https://eternaflor.lovable.app/" },
+      { rel: "canonical", href: "https://eterna-flor.netlify.app/" },
       ...heroImagePreloads(loaderData?.settings?.hero_image_url || "/homepage-hero.webp"),
     ],
     scripts: [
@@ -89,7 +89,7 @@ export const Route = createFileRoute("/")({
                   availability: p.available
                     ? "https://schema.org/InStock"
                     : "https://schema.org/OutOfStock",
-                  url: "https://eternaflor.lovable.app/catalogo",
+                  url: "https://eterna-flor.netlify.app/catalogo",
                 },
               },
             })),
@@ -103,7 +103,7 @@ export const Route = createFileRoute("/")({
 const values = [
   { title: "Não murcham", description: "Duram para sempre.", icon: Flower2 },
   { title: "A teu gosto", description: "Personaliza cores e detalhes.", icon: Palette },
-  { title: "Feitas à mão", description: "Criado com carinho.", icon: HeartHandshake },
+  { title: "Feitas à mão", description: "Criadas com carinho.", icon: HeartHandshake },
   { title: "Com o teu perfume", description: "Finaliza com o teu aroma.", icon: SprayCan },
 ];
 
@@ -194,7 +194,7 @@ function Index() {
             data-hero="intro"
             className="mt-6 max-w-sm text-base font-light leading-relaxed md:mt-8 md:text-lg"
           >
-            Flores feitas à mão para oferecer hoje a quem mais gostas e guardar memórias eternamente.
+            Flores feitas à mão para oferecer hoje a quem mais amas e guardar memórias eternamente.
           </p>
           <div data-hero="cta" className="mt-8 flex flex-col gap-3 md:mt-12 sm:flex-row sm:gap-6">
             <Link to="/catalogo" className={btnPrimary}>
@@ -256,7 +256,7 @@ function Index() {
       <section id="favoritos" className="scroll-mt-20 border-t border-border">
         <div className="mx-auto max-w-[1440px] px-6 py-24 md:px-16 md:py-32">
           <div data-reveal="heading" className="mb-16 md:mb-20">
-            <p className={eyebrow}>Explore a nossa coleção.</p>
+            <p className={eyebrow}>Explora a nossa coleção.</p>
             <h2 className="mt-4 text-5xl font-light md:text-6xl">Escolhe o teu favorito</h2>
           </div>
           <div className="grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4">

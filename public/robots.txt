@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://eternaflor.lovable.app/sitemap.xml
+Sitemap: https://eterna-flor.netlify.app/sitemap.xml

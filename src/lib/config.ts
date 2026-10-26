@@ -20,14 +20,11 @@ export const productOrderMessage = (p: {
   customizable?: boolean;
 }) => {
   const lines = [
-    `Olá! Vi o ${p.name} no site da Eterna Flor e gostava de encomendar 😊`,
+    "Olá! Vi este produto no site da Eterna Flor e gostava de encomendar 😊",
     "",
     `Produto: ${p.name}`,
     `Preço: ${formatPrice(p.price)}`,
   ];
-  if (p.customizable) {
-    lines.push("", "Gostava também de saber que opções de personalização estão disponíveis.");
-  }
   return lines.join("\n");
 };
 

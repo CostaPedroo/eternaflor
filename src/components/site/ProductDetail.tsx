@@ -128,7 +128,7 @@ export function ProductDetail({
               productId={p.id}
               {...(categoryId ? { categoryId } : {})}
               fromModal
-              className="mt-3 inline-flex min-h-11 w-full items-center justify-center border border-primary/50 px-4 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              className="mt-3 inline-flex min-h-12 w-full items-center justify-center border border-primary px-4 py-4 text-[10px] uppercase tracking-[0.25em] transition-all hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
             />
           </div>
         </div>

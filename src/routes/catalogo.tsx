@@ -31,7 +31,7 @@ export const Route = createFileRoute("/catalogo")({
       { property: "og:locale", content: "pt_PT" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://eternaflor.lovable.app/catalogo" }],
+    links: [{ rel: "canonical", href: "https://eterna-flor.netlify.app/catalogo" }],
   }),
   component: Catalogo,
 });
@@ -130,7 +130,7 @@ function Catalogo() {
                 grid.current?.capture();
                 setQ(e.target.value);
               }}
-              placeholder="Pesquisar flores ou bouquets…"
+              placeholder="Pesquisar produtos…"
               aria-label="Pesquisar"
               className="h-11 w-full min-w-0 bg-transparent py-3 pl-7 text-base font-light outline-none transition-colors focus:border-sage placeholder:text-muted-foreground/60 md:h-auto md:border-b md:border-border"
             />

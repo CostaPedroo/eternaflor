@@ -8,8 +8,9 @@ import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/Site
 export const Route = createFileRoute("/galeria")({
   loader: ({ context }) => context.queryClient.fetchQuery(publicGalleryQuery),
   head: () => ({
+    links: [{ rel: "canonical", href: "https://eterna-flor.netlify.app/galeria" }],
     meta: [
-      { title: "Galeria — Eterna Flor" },
+      { title: "Galeria | Eterna Flor" },
       {
         name: "description",
         content:
@@ -37,7 +38,7 @@ function GalleryPage() {
             Feito à tua maneira.
           </h1>
           <p className="mt-6 text-base font-light leading-relaxed text-muted-foreground md:text-lg">
-            Cada produto pode ser adaptado a teu gosto e estilo de quem o recebe
+            Cada produto pode ser adaptado ao teu gosto e ao estilo de quem o recebe
           </p>
         </div>
         {isError || data?.unavailable ? (
