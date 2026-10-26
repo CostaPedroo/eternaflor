@@ -14,7 +14,11 @@ export const formatPrice = (n: number | string) => {
   return `${Number.isInteger(v) ? v : v.toFixed(2).replace(".", ",")}€`;
 };
 
-export const productOrderMessage = (p: { name: string; price: number | string; customizable?: boolean }) => {
+export const productOrderMessage = (p: {
+  name: string;
+  price: number | string;
+  customizable?: boolean;
+}) => {
   const lines = [
     `Olá! Vi o ${p.name} no site da Eterna Flor e gostava de encomendar 😊`,
     "",
@@ -26,6 +30,40 @@ export const productOrderMessage = (p: { name: string; price: number | string; c
   }
   return lines.join("\n");
 };
+
+export function customizationOrderMessage(request: {
+  name: string;
+  category?: string;
+  product?: string;
+  budget: string;
+  colors: string;
+  flowers: string;
+  occasion: string;
+  date: string;
+  details: string;
+}) {
+  const lines = [
+    "Olá! Gostava de pedir uma personalização na Eterna Flor.",
+    "",
+    `Nome: ${request.name.trim()}`,
+  ];
+  if (request.category) lines.push(`Categoria: ${request.category}`);
+  lines.push(
+    `Produto: ${request.product || "Criar de raiz / Sem produto específico do catálogo"}`,
+    `Orçamento: ${request.budget}`,
+  );
+  const date = request.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$3/$2/$1");
+  for (const [label, value] of [
+    ["Cores preferidas", request.colors],
+    ["Flores preferidas", request.flowers],
+    ["Ocasião", request.occasion],
+    ["Data", date],
+    ["Detalhes adicionais", request.details],
+  ]) {
+    if (value?.trim()) lines.push(`${label}: ${value.trim()}`);
+  }
+  return lines.join("\n");
+}
 
 /** Image values stored in the DB are either absolute/relative URLs or storage paths in the product bucket. */
 export const isStoragePath = (v: string | null | undefined): v is string =>

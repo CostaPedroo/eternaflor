@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { OrderDatePicker as DatePicker } from "@/components/site/OrderDatePicker";
 import { ModalTestRouter } from "./modal-router";
 
@@ -12,6 +12,10 @@ function OrderDatePicker() {
     </ModalTestRouter>
   );
 }
+
+// Compile the deferred module outside interaction timeouts; browser checks
+// exercise its actual on-demand network loading.
+beforeAll(() => import("@/components/site/OrderDateCalendar"), 20000);
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

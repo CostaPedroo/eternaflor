@@ -9,11 +9,17 @@ import {
 } from "@tanstack/react-router";
 import type { HistoryState } from "@tanstack/history";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Route as HomeRoute } from "@/routes/index";
+beforeAll(() => import("@/components/site/OrderDateCalendar"), 20000);
 
 vi.mock("@/lib/catalog.functions", () => ({
   publicProductsQuery: { queryKey: ["public-products"], queryFn: () => [], staleTime: Infinity },
+  publicCategoriesQuery: {
+    queryKey: ["public-categories"],
+    queryFn: () => [],
+    staleTime: Infinity,
+  },
 }));
 vi.mock("@/lib/site-settings", () => ({
   publicSiteSettingsQuery: {

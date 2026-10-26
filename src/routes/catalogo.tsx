@@ -188,7 +188,14 @@ function Catalogo() {
           className="col-span-2 mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:mt-8 md:gap-x-10 md:gap-y-16 lg:grid-cols-3 xl:grid-cols-4"
         >
           {visible.map((p, i) => (
-            <ProductCard key={p.id} p={p} revealDelay={(i % 4) * motion.stagger.item} />
+            <ProductCard
+              key={p.id}
+              p={p}
+              revealDelay={(i % 4) * motion.stagger.item}
+              categoryId={
+                categories.some((category) => category.id === filter) ? filter : undefined
+              }
+            />
           ))}
         </AnimatedGrid>
         {visible.length === 0 && (

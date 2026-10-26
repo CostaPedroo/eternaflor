@@ -5,8 +5,17 @@ import { useEffect, useRef } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ProductDetail } from "@/components/site/ProductDetail";
 import { ResponsiveProductImage } from "@/components/site/ResponsiveProductImage";
+import { ProductCustomizationLink } from "@/components/site/ProductCustomizationLink";
 
-export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDelay?: number }) {
+export function ProductCard({
+  p,
+  revealDelay = 0,
+  categoryId,
+}: {
+  p: PublicProduct;
+  revealDelay?: number;
+  categoryId?: string | undefined;
+}) {
   const modal = useModalHistory("produto");
   const opener = useRef<HTMLButtonElement | null>(null);
   const imageTrigger = useRef<HTMLButtonElement>(null);
@@ -84,7 +93,7 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
           <p className="mt-3 hidden shrink-0 text-sm font-light leading-relaxed text-muted-foreground md:block md:min-h-[2lh]">
             {p.short_description}
           </p>
-          <div className="mt-auto shrink-0 pt-4 md:pt-8">
+          <div className="mt-auto grid shrink-0 gap-1 pt-4 sm:grid-cols-2 sm:gap-2 md:pt-8">
             {p.available ? (
               <a
                 href={wa(productOrderMessage(p))}
@@ -102,12 +111,18 @@ export function ProductCard({ p, revealDelay = 0 }: { p: PublicProduct; revealDe
                 Indisponível
               </span>
             )}
+            <ProductCustomizationLink
+              productId={p.id}
+              {...(categoryId ? { categoryId } : {})}
+              className="inline-flex min-h-9 w-full items-center justify-center text-[9px] uppercase tracking-[0.16em] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:border sm:border-primary/50 sm:py-3.5 sm:no-underline sm:hover:bg-muted md:py-4"
+            />
           </div>
         </div>
       </article>
       {open && (
         <ProductDetail
           p={p}
+          {...(categoryId ? { categoryId } : {})}
           restoreFocus={() => {
             const target = opener.current?.isConnected ? opener.current : imageTrigger.current;
             target?.focus({ preventScroll: true });

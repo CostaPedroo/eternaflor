@@ -3,9 +3,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
 import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublicProduct } from "@/lib/catalog.functions";
 import { ModalTestRouter } from "./modal-router";
+beforeAll(() => import("@/components/site/OrderDateCalendar"), 20000);
 
 const settingsRead = vi.hoisted(() => vi.fn());
 
@@ -15,9 +16,22 @@ vi.mock("@tanstack/react-router", async (original) => ({
     to,
     hash,
     preload: _preload,
+    search,
+    replace: _replace,
+    state: _state,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { to: string; hash?: string; preload?: false }) => (
-    <a {...props} href={`${to}${hash ? `#${hash}` : ""}`} />
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & {
+    to: string;
+    hash?: string;
+    preload?: false;
+    search?: Record<string, string>;
+    replace?: boolean;
+    state?: unknown;
+  }) => (
+    <a
+      {...props}
+      href={`${to}${search ? `?${new URLSearchParams(search)}` : ""}${hash ? `#${hash}` : ""}`}
+    />
   ),
 }));
 vi.mock("@/lib/catalog.functions", () => ({
@@ -127,21 +141,21 @@ describe("Public pages with motion", () => {
       const calendar = within(await screen.findByRole("dialog", { name: "Escolher data" }));
       await calendar.findByRole("grid", {}, { timeout: 5000 });
       fireEvent.click(calendar.getByRole("button", { name: /25 de outubro de 2026/i }));
-      fireEvent.click(screen.getByRole("button", { name: "Criar bouquet personalizado" }));
+      fireEvent.click(screen.getByRole("button", { name: "Pedir personalização" }));
       const url = new URL(String(openWhatsApp.mock.calls[0]?.[0]));
-      expect(url.searchParams.get("text")).toContain("Data: 2026-10-25");
+      expect(url.searchParams.get("text")).toContain("Data: 25/10/2026");
       expect(url.searchParams.get("text")).toContain("Nome: Maria");
       expect(openWhatsApp).toHaveBeenCalledWith(expect.any(String), "_blank");
       fireEvent.click(screen.getByRole("button", { name: "Data em que precisa" }));
       const reopened = within(await screen.findByRole("dialog", { name: "Escolher data" }));
       fireEvent.click(reopened.getByRole("button", { name: "Limpar" }));
-      fireEvent.click(screen.getByRole("button", { name: "Criar bouquet personalizado" }));
+      fireEvent.click(screen.getByRole("button", { name: "Pedir personalização" }));
       const cleared = new URL(String(openWhatsApp.mock.calls[1]?.[0]));
-      expect(cleared.searchParams.get("text")).toContain("Data: —");
+      expect(cleared.searchParams.get("text")).not.toContain("Data:");
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 15000);
 
   it("synchronizes mobile sheet categories, sorting, price shortcuts and reset with the catalogue", async () => {
     const client = new QueryClient();
@@ -523,10 +537,11 @@ describe("Public pages with motion", () => {
     expect(screen.getByText(/Normalmente entre 3 e 7 dias/)).toBeVisible();
     fireEvent.click(faq);
     expect(faq).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("link", { name: "Personalizar" })).toHaveAttribute(
-      "href",
-      "#personalizados",
-    );
+    expect(
+      screen
+        .getAllByRole("link", { name: "Personalizar" })
+        .find((link) => link.getAttribute("href") === "#personalizados"),
+    ).toHaveAttribute("href", "#personalizados");
   });
 
   it("preserves catalogue filtering and gallery changes with no console errors", async () => {

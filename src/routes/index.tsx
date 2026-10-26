@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { wa, INSTAGRAM, TIKTOK, formatPrice } from "@/lib/config";
-import { publicProductsQuery } from "@/lib/catalog.functions";
+import {
+  publicProductsQuery,
+  publicCategoriesQuery,
+  type PublicProduct,
+  type PublicCategory,
+} from "@/lib/catalog.functions";
 import { publicSiteSettingsQuery } from "@/lib/site-settings";
 import { galleryPreviewQuery } from "@/lib/gallery.functions";
 import { GalleryPreview } from "@/components/site/GalleryPreview";
-import { useState, type FormEvent } from "react";
-import { MessageCircle, Instagram, Flower2, Palette, HeartHandshake, SprayCan } from "lucide-react";
+import { Instagram, Flower2, Palette, HeartHandshake, SprayCan } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -18,7 +22,7 @@ import { FallbackImage } from "@/components/site/FallbackImage";
 import { HeroImage } from "@/components/site/HeroImage";
 import { StorefrontMotion } from "@/components/site/StorefrontMotion";
 import { ImageReveal } from "@/components/site/ImageReveal";
-import { OrderDatePicker } from "@/components/site/OrderDatePicker";
+import { CustomizationForm } from "@/components/site/CustomizationForm";
 import { motion } from "@/lib/storefront-motion";
 import { heroImagePreloads } from "@/lib/responsive-images";
 import { SiteHeader, SiteFooter, FloatingWhatsApp } from "@/components/site/SiteChrome";
@@ -30,14 +34,15 @@ const DESC =
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    const [products, settings, gallery] = await Promise.all([
+    const [products, settings, gallery, categories] = await Promise.all([
       context.queryClient.ensureQueryData(publicProductsQuery),
       context.queryClient.fetchQuery(publicSiteSettingsQuery).catch(() => null),
       context.queryClient
         .fetchQuery(galleryPreviewQuery)
         .catch(() => ({ images: [], unavailable: true })),
+      context.queryClient.ensureQueryData(publicCategoriesQuery),
     ]);
-    return { products, settings, gallery };
+    return { products, settings, gallery, categories };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -117,7 +122,7 @@ const faqs = [
   ],
   [
     "Posso escolher as cores e as flores?",
-    "Claro — usa o formulário de bouquet personalizado e enviamos-te uma proposta pelo WhatsApp.",
+    "Claro — usa o formulário de personalização ou escolhe um dos produtos do nosso catálogo e enviamos-te uma proposta pelo WhatsApp.",
   ],
   [
     "Como devo conservar as flores?",
@@ -134,6 +139,10 @@ const eyebrow = "text-xs font-medium uppercase tracking-[0.4em] text-sage";
 function Index() {
   const initial = Route.useLoaderData();
   const { data: all } = useSuspenseQuery({ ...publicProductsQuery, initialData: initial.products });
+  const { data: categories } = useSuspenseQuery({
+    ...publicCategoriesQuery,
+    initialData: initial.categories ?? [],
+  });
   const { data: settings, isError: settingsError } = useQuery({
     ...publicSiteSettingsQuery,
     initialData: initial.settings,
@@ -185,7 +194,7 @@ function Index() {
             data-hero="intro"
             className="mt-6 max-w-sm text-base font-light leading-relaxed md:mt-8 md:text-lg"
           >
-            Bouquets feitos à mão para oferecer hoje e guardar durante anos.
+            Flores feitas à mão para oferecer hoje a quem mais gostas e guardar memórias eternamente.
           </p>
           <div data-hero="cta" className="mt-8 flex flex-col gap-3 md:mt-12 sm:flex-row sm:gap-6">
             <Link to="/catalogo" className={btnPrimary}>
@@ -247,8 +256,8 @@ function Index() {
       <section id="favoritos" className="scroll-mt-20 border-t border-border">
         <div className="mx-auto max-w-[1440px] px-6 py-24 md:px-16 md:py-32">
           <div data-reveal="heading" className="mb-16 md:mb-20">
-            <p className={eyebrow}>Mais pedidos</p>
-            <h2 className="mt-4 text-5xl font-light md:text-6xl">Os favoritos</h2>
+            <p className={eyebrow}>Explore a nossa coleção.</p>
+            <h2 className="mt-4 text-5xl font-light md:text-6xl">Escolhe o teu favorito</h2>
           </div>
           <div className="grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4">
             {products.map((p, i) => (
@@ -263,7 +272,11 @@ function Index() {
         </div>
       </section>
 
-      <CustomSection imageUrl={settingsError ? null : settings?.custom_bouquet_image_url} />
+      <CustomSection
+        imageUrl={settingsError ? null : settings?.custom_bouquet_image_url}
+        products={all}
+        categories={categories}
+      />
 
       <GalleryPreview initial={initial.gallery} />
 
@@ -339,32 +352,15 @@ function Index() {
   );
 }
 
-const budgets = ["Até 15€", "15€–25€", "25€–40€", "40€–60€", "60€+"];
-const fieldLabel = "block text-[10px] uppercase tracking-[0.2em] text-muted-foreground";
-const field =
-  "w-full border-b border-border bg-transparent pb-2 pt-1 text-lg font-light outline-none transition-colors focus:border-sage placeholder:text-muted-foreground/50";
-
-function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
-  const [budget, setBudget] = useState(budgets[1]);
-
-  const submit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const g = (k: string) => String(f.get(k) || "").trim() || "—";
-    const msg = [
-      "Olá! Gostava de pedir um bouquet personalizado 🌸",
-      "",
-      `Nome: ${g("nome")}`,
-      `Ocasião: ${g("ocasiao")}`,
-      `Data: ${g("data")}`,
-      `Orçamento: ${budget}`,
-      `Cores: ${g("cores")}`,
-      `Flores: ${g("flores")}`,
-      `Detalhes: ${g("detalhes")}`,
-    ].join("\n");
-    window.open(wa(msg), "_blank");
-  };
-
+function CustomSection({
+  imageUrl,
+  products,
+  categories,
+}: {
+  imageUrl: string | null | undefined;
+  products: PublicProduct[];
+  categories: PublicCategory[];
+}) {
   return (
     <section id="personalizados" className="scroll-mt-20 border-t border-border">
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-16 px-6 py-24 md:gap-8 md:px-16 md:py-32 min-[1200px]:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] min-[1200px]:gap-12">
@@ -376,7 +372,7 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
               data-reveal-direction="right"
               className="mt-6 text-5xl font-light leading-[1.05] md:text-6xl"
             >
-              Um bouquet feito só para essa pessoa.
+              Personaliza à tua maneira, especialmente para aquela pessoa
             </h2>
             <p
               data-reveal
@@ -384,7 +380,8 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
               data-reveal-delay={motion.stagger.item}
               className="mt-8 max-w-lg text-lg font-light leading-relaxed text-muted-foreground"
             >
-              Escolhe as cores, as flores e o orçamento. Nós tratamos do resto.
+              Escolhe um produto do catálogo ou conta-nos a tua ideia. Personalizamos cores,
+              flores e detalhes ao teu gosto.
             </p>
           </div>
           <ImageReveal className="image-hover-frame hidden aspect-[3/2] min-h-0 w-full shrink-0 overflow-hidden bg-muted md:block min-[1200px]:aspect-square">
@@ -400,66 +397,7 @@ function CustomSection({ imageUrl }: { imageUrl: string | null | undefined }) {
           </ImageReveal>
         </div>
 
-        <form
-          data-reveal
-          data-reveal-direction="right"
-          data-reveal-delay={motion.stagger.item}
-          onSubmit={submit}
-          className="space-y-8 border border-blush bg-card p-6 md:space-y-10 md:p-16"
-        >
-          <h3 className="font-serif text-3xl font-light italic md:text-4xl">
-            Formulário de pedido
-          </h3>
-          <label className="block">
-            <span className={fieldLabel}>Nome</span>
-            <input name="nome" required className={field} />
-          </label>
-          <div className="grid gap-10 sm:grid-cols-2">
-            <label className="block">
-              <span className={fieldLabel}>Ocasião</span>
-              <input name="ocasiao" placeholder="Aniversário, Dia da Mãe…" className={field} />
-            </label>
-            <OrderDatePicker />
-          </div>
-          <div>
-            <span className={fieldLabel}>Orçamento</span>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {budgets.map((b) => (
-                <button
-                  type="button"
-                  key={b}
-                  onClick={() => setBudget(b)}
-                  className={`border px-6 py-2 text-[10px] uppercase tracking-[0.15em] transition-colors ${budget === b ? "border-primary bg-primary text-primary-foreground" : "border-primary/30 hover:border-primary"}`}
-                >
-                  {b}
-                </button>
-              ))}
-            </div>
-          </div>
-          <label className="block">
-            <span className={fieldLabel}>Cores preferidas</span>
-            <input name="cores" placeholder="Rosa-velho, creme, verde…" className={field} />
-          </label>
-          <label className="block">
-            <span className={fieldLabel}>Flores preferidas</span>
-            <input name="flores" placeholder="Rosas, tulipas, margaridas…" className={field} />
-          </label>
-          <label className="block">
-            <span className={fieldLabel}>Detalhes adicionais</span>
-            <textarea name="detalhes" rows={2} className={`${field} resize-none`} />
-          </label>
-          <button
-            data-follow-reveal
-            type="submit"
-            className="flex w-full items-center justify-center gap-3 bg-whatsapp px-3 py-5 text-xs uppercase tracking-[0.3em] text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            <MessageCircle aria-hidden="true" className="h-5 w-5 shrink-0" />
-            <span className="min-w-0 text-center [overflow-wrap:anywhere]">
-              <span className="block sm:inline">Criar bouquet</span>{" "}
-              <span className="block sm:inline">personalizado</span>
-            </span>
-          </button>
-        </form>
+        <CustomizationForm products={products} categories={categories} />
       </div>
     </section>
   );

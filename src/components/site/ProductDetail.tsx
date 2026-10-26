@@ -14,9 +14,18 @@ import { formatPrice, productOrderMessage, wa } from "@/lib/config";
 import { productImagesQuery, type PublicProductImage } from "@/lib/product-images";
 import { CrossfadeImage } from "@/components/site/CrossfadeImage";
 import { completeEntrance, motionStyle } from "@/lib/storefront-motion";
+import { ProductCustomizationLink } from "@/components/site/ProductCustomizationLink";
 
 /** Mounted only when the user opens a card, so catalogue cards do not fetch galleries. */
-export function ProductDetail({ p, restoreFocus }: { p: PublicProduct; restoreFocus: () => void }) {
+export function ProductDetail({
+  p,
+  restoreFocus,
+  categoryId,
+}: {
+  p: PublicProduct;
+  restoreFocus: () => void;
+  categoryId?: string;
+}) {
   const { data, isPending, isError, refetch } = useQuery(productImagesQuery(p.id));
   const images = data?.length ? data : [{ id: "main", url: p.image ?? "", alt: null }];
   const onSale = p.old_price != null && p.old_price > p.price;
@@ -115,6 +124,12 @@ export function ProductDetail({ p, restoreFocus }: { p: PublicProduct; restoreFo
                 Indisponível
               </span>
             )}
+            <ProductCustomizationLink
+              productId={p.id}
+              {...(categoryId ? { categoryId } : {})}
+              fromModal
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center border border-primary/50 px-4 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            />
           </div>
         </div>
       </Content>

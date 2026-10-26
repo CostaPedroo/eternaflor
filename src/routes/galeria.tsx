@@ -37,7 +37,7 @@ function GalleryPage() {
             Feito à tua maneira.
           </h1>
           <p className="mt-6 text-base font-light leading-relaxed text-muted-foreground md:text-lg">
-            Cada bouquet pode ser adaptado às cores, flores e estilo de quem o recebe.
+            Cada produto pode ser adaptado a teu gosto e estilo de quem o recebe
           </p>
         </div>
         {isError || data?.unavailable ? (
