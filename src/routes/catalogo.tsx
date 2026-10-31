@@ -185,7 +185,7 @@ function Catalogo() {
         </p>
         <AnimatedGrid
           ref={grid}
-          className="col-span-2 mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:mt-8 md:gap-x-10 md:gap-y-16 lg:grid-cols-3 xl:grid-cols-4"
+          className="catalogue-product-grid col-span-2 mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:mt-8 md:gap-x-10 md:gap-y-16 lg:grid-cols-3 xl:grid-cols-4"
         >
           {visible.map((p, i) => (
             <ProductCard

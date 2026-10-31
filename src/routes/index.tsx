@@ -259,7 +259,7 @@ function Index() {
             <p className={eyebrow}>Explora a nossa coleção.</p>
             <h2 className="mt-4 text-5xl font-light md:text-6xl">Escolhe o teu favorito</h2>
           </div>
-          <div className="grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4">
+          <div className="catalogue-product-grid grid grid-cols-2 items-stretch gap-x-4 gap-y-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-4">
             {products.map((p, i) => (
               <ProductCard key={p.id} p={p} revealDelay={i * motion.stagger.item} />
             ))}

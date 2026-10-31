@@ -74,7 +74,7 @@ export function ProductCard({
               )}
             </button>
           </DialogTrigger>
-          <div className="mt-4 flex shrink-0 items-baseline justify-between gap-3 md:mt-8">
+          <div className="product-card-heading mt-4 flex shrink-0 items-baseline justify-between gap-3 md:mt-8">
             <h3 className="min-w-0 flex-1 text-xl font-light md:min-h-[2lh] md:text-3xl">
               <DialogTrigger asChild>
                 <button

@@ -156,6 +156,22 @@
   .gallery-grid:not(.gallery-grid-preview) {
     columns: 4;
   }
+
+  /* Catalogue desktop: share content rows without limiting title length. */
+  .catalogue-product-grid > .product-card,
+  .catalogue-product-grid > .product-card > [data-card-reveal] {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 4;
+    row-gap: 0;
+  }
+  .catalogue-product-grid .product-card-heading {
+    align-items: flex-start;
+  }
+  .catalogue-product-grid .product-card-heading > span {
+    white-space: nowrap;
+    text-align: right;
+  }
 }
 .storefront-motion {
   /* Clip sideways reveals without turning this root into a scroll container. */
